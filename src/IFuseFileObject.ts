@@ -1,5 +1,4 @@
 
-
 /*
 Copyright 2023 Breautek 
 
@@ -86,7 +85,7 @@ export interface IFuseFileObject<TReadType> {
      * Note that this method may leave a partial state, should an error
      * have occurred while creating the directory tree.
      */
-    mkdir(recursive?: boolean): Promise<void>;
+    mkdir(recursive?: boolean): Promise<boolean>;
 
     /**
      * Removes the file or directory.
@@ -132,7 +131,7 @@ export interface IFuseFileObject<TReadType> {
 
     /**
      * Truncates the data file and then writes data, replacing any
-     * contents it may have. Returns the number of bytes written.
+     * contents it may have.
      * 
      * If this file object is a directory, an error will be thrown.
      */

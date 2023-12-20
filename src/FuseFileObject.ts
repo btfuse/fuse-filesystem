@@ -82,7 +82,7 @@ export class FuseFileObject implements IFuseFileObject<ArrayBuffer> {
         return await this.$fs.getSize(this);
     }
 
-    public async mkdir(recursive?: boolean | undefined): Promise<void> {
+    public async mkdir(recursive?: boolean | undefined): Promise<boolean> {
         return await this.$fs.mkdir(this, recursive);
     }
 

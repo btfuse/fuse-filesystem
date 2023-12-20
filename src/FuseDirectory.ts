@@ -68,8 +68,8 @@ export class FuseDirectory implements IFuseFileObject<string[]> {
         return this.$fileObj.getSize();
     }
 
-    public async mkdir(recursive?: boolean | undefined): Promise<void> {
-        return this.$fileObj.mkdir(recursive);    
+    public async mkdir(recursive?: boolean | undefined): Promise<boolean> {
+        return await this.$fileObj.mkdir(recursive);
     }
     
     public async read(): Promise<string[]> {

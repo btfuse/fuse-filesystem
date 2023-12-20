@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="deploymentTargetDropDown">
+    <value>
+      <entry key="All Tests">
+        <State />
+      </entry>
+      <entry key="app">
+        <State />
+      </entry>
+      <entry key="canRecursivelyDelete()">
+        <State />
+      </entry>
+      <entry key="deleteAPIShouldReturnFalse()">
+        <State />
+      </entry>
+      <entry key="existsShouldBeFalse()">
+        <State />
+      </entry>
+      <entry key="existsShouldBeTrue()">
+        <State />
+      </entry>
+      <entry key="testapp">
+        <State />
+      </entry>
+    </value>
+  </component>
+</project>

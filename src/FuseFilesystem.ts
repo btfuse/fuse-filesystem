@@ -74,7 +74,7 @@ export class FuseFilesystem extends FusePlugin {
         return size;
     }
 
-    public async mkdir(file: FuseFileObject, recursive?: boolean): Promise<void> {
+    public async mkdir(file: FuseFileObject, recursive?: boolean): Promise<boolean> {
         let response: FuseAPIResponse = await this._exec('file/mkdir', ContentType.JSON, {
             path: file.getPath(),
             recursive: !!recursive
@@ -83,6 +83,9 @@ export class FuseFilesystem extends FusePlugin {
         if (response.isError()) {
             throw await response.readAsError();
         }
+
+        let result: string = await response.readAsText();
+        return result === 'true';
     }
 
     public async read(file: FuseFileObject, length: number, offset: number): Promise<ArrayBuffer> {
