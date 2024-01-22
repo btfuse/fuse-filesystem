@@ -22,6 +22,8 @@ import static org.junit.Assert.*;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import com.breautek.fuse.testtools.FuseTestAPIClient;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -45,6 +47,7 @@ public class FuseFilesystemPluginTest {
     @BeforeClass
     public static void setUp() {
         try {
+            setupFilesDir();
             setupSizeTestFile();
             setupMkdirTest();
             setupReadTest();
@@ -55,6 +58,13 @@ public class FuseFilesystemPluginTest {
         }
         catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void setupFilesDir() throws IOException {
+        File filesDir = new File("/data/data/com.breautek.fuse.filesystem.test/files");
+        if (!filesDir.exists()) {
+            filesDir.mkdir();
         }
     }
 
@@ -72,18 +82,27 @@ public class FuseFilesystemPluginTest {
 
     private static void setupWriteFile() throws IOException {
         File appendFile = new File("/data/data/com.breautek.fuse.filesystem.test/files/writeFileTest");
+        File appendOffsetFile = new File("/data/data/com.breautek.fuse.filesystem.test/files/writeFileTestWithOffset");
         if (appendFile.exists()) {
             appendFile.delete();
         }
 
+        if (appendOffsetFile.exists()) {
+            appendOffsetFile.delete();
+        }
+
         boolean _unused = appendFile.createNewFile();
+        _unused = appendOffsetFile.createNewFile();
         FileOutputStream io = new FileOutputStream(appendFile, false);
+        FileOutputStream appendIO = new FileOutputStream(appendOffsetFile, false);
 
         String content = "Initial State!";
         byte[] buffer = content.getBytes();
 
         io.write(buffer);
+        appendIO.write(buffer);
         io.close();
+        appendIO.close();
     }
 
     private static void setupAppendFile() throws IOException {
@@ -573,11 +592,20 @@ public class FuseFilesystemPluginTest {
 
             String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/writeFileTest";
 
+            JSONObject jparams = new JSONObject();
+            try {
+                jparams.put("path", testFile);
+                jparams.put("offset", 0);
+            }
+            catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+
             byte [] newContent = "Rewrite".getBytes();
 
             FuseTestAPIClient client;
             try {
-                byte[] content = createParamsBuffer(testFile, newContent);
+                byte[] content = createParamsBuffer(jparams.toString(), newContent);
                 client = new FuseTestAPIClient.Builder()
                         .setFuseContext(activity.getFuseContext())
                         .setAPIPort(port)
@@ -620,6 +648,73 @@ public class FuseFilesystemPluginTest {
             }
 
             assertEquals("Rewrite State!", newContentStr);
+        });
+    }
+
+    @Test
+    public void canWriteDataToFileWithOffset() {
+        activityRule.getScenario().onActivity(activity -> {
+            int port = activity.getFuseContext().getAPIPort();
+            String secret = activity.getFuseContext().getAPISecret();
+
+            String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/writeFileTestWithOffset";
+
+            JSONObject jparams = new JSONObject();
+            try {
+                jparams.put("path", testFile);
+                jparams.put("offset", 2);
+            }
+            catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+
+            byte [] newContent = "Rewrite".getBytes();
+
+            FuseTestAPIClient client;
+            try {
+                byte[] content = createParamsBuffer(jparams.toString(), newContent);
+                client = new FuseTestAPIClient.Builder()
+                        .setFuseContext(activity.getFuseContext())
+                        .setAPIPort(port)
+                        .setAPISecret(secret)
+                        .setPluginID("FuseFilesystem")
+                        .setType("application/octet-stream")
+                        .setEndpoint("/file/write")
+                        .setContent(content)
+                        .build();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            FuseTestAPIClient.FuseAPITestResponse response = client.execute();
+            assertEquals(200, response.getStatus());
+
+            int reportedBytesWritten = Integer.parseInt(response.readAsString());
+
+            assertEquals(newContent.length, reportedBytesWritten);
+
+            File file = new File(testFile);
+
+            String newContentStr = null;
+            FileReader reader = null;
+            try {
+                reader = new FileReader(file);
+                char[] readerBuffer = new char[(int) file.length()];
+                reader.read(readerBuffer);
+                newContentStr = new String(readerBuffer);
+                reader.close();
+            } catch (Exception e) {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+                throw new RuntimeException(e);
+            }
+
+            assertEquals("InRewritetate!", newContentStr);
         });
     }
 

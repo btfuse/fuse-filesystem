@@ -5,19 +5,10 @@
       <entry key="All Tests">
         <State />
       </entry>
-      <entry key="app">
+      <entry key="canWriteDataToFile()">
         <State />
       </entry>
-      <entry key="canRecursivelyDelete()">
-        <State />
-      </entry>
-      <entry key="deleteAPIShouldReturnFalse()">
-        <State />
-      </entry>
-      <entry key="existsShouldBeFalse()">
-        <State />
-      </entry>
-      <entry key="existsShouldBeTrue()">
+      <entry key="canWriteDataToFileWithOffset()">
         <State />
       </entry>
       <entry key="testapp">

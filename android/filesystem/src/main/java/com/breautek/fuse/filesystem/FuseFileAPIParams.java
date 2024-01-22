@@ -37,7 +37,7 @@ public class FuseFileAPIParams {
     private byte[] $data;
     private long $contentLength;
 
-    private static int CONTENT_LENGTH_BYTE_SIZE = 4;
+    private static final int CONTENT_LENGTH_BYTE_SIZE = 4;
 
     private FuseFileAPIParams() {}
 

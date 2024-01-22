@@ -101,5 +101,9 @@ public class FileReadHandler extends APIHandler<FuseFilesystemPlugin> {
             io.close();
             throw e;
         }
+
+        io.close();
+
+        response.didFinish();
     }
 }

@@ -24,6 +24,9 @@ import com.breautek.fuse.FusePlugin.APIHandler;
 import com.breautek.fuse.filesystem.FuseFileAPIParams;
 import com.breautek.fuse.filesystem.FuseFilesystemPlugin;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,9 +38,12 @@ public class FileWriteHandler extends APIHandler<FuseFilesystemPlugin> {
     }
 
     @Override
-    public void execute(FuseAPIPacket packet, FuseAPIResponse response) throws IOException {
+    public void execute(FuseAPIPacket packet, FuseAPIResponse response) throws IOException, JSONException {
         FuseFileAPIParams params = FuseFileAPIParams.parse(packet.getContentLength(), packet.getInputStream());
-        String path = new String(params.getParams());
+        String jparamsStr = new String(params.getParams());
+        JSONObject jparams = new JSONObject(jparamsStr);
+        String path = jparams.getString("path");
+        long offset = jparams.getLong("offset");
 
         File file = new File(path);
 
@@ -51,6 +57,9 @@ public class FileWriteHandler extends APIHandler<FuseFilesystemPlugin> {
         RandomAccessFile io = new RandomAccessFile(file, "rw");
         int bytesWritten = 0;
         try {
+            if (offset > 0) {
+                io.seek(offset);
+            }
             if (contentLength > 0) {
                 InputStream readStream = packet.getInputStream();
                 int chunkSize = this.plugin.getChunkSize();
