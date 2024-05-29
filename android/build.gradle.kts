@@ -8,3 +8,13 @@ tasks.wrapper {
     distributionType = Wrapper.DistributionType.BIN
     gradleVersion = "8.7"
 }
+
+allprojects {
+    subprojects {
+        afterEvaluate {
+            tasks.withType(JavaCompile::class.java).configureEach {
+                options.compilerArgs.add("-Xlint:deprecation")
+            }
+        }
+    }
+}
