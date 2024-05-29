@@ -32,7 +32,11 @@ BUILD_NO=$((BUILD_NO + 1))
 echo $BUILD_NO > ./android/BUILD
 
 ./buildAndroid.sh
-./test.sh
+
+spushd android
+    ./gradlew :filesystem:test
+    ./gradlew :filesystem:cAT
+spopd
 
 git add android/VERSION android/BUILD
 git commit -m "Android Release: $VERSION"
