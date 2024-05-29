@@ -1,5 +1,6 @@
 plugins {
     id("com.android.library")
+    id("maven-publish")
 }
 
 android {
@@ -19,9 +20,16 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
     }
 }
 
@@ -35,3 +43,28 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
+
+publishing {
+    publications {
+        create<MavenPublication>("release") {
+            groupId = "com.breautek.fuse"
+            artifactId = "filesystem"
+            version = file("../VERSION").readText().trim()
+
+            afterEvaluate {
+                from(components["release"])
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = uri("https://archiva.breautek.com/repository/breautek")
+            credentials {
+                username = findProperty("breautek.repository.user").toString()
+                password = findProperty("breautek.repository.password").toString()
+            }
+        }
+    }
+}
+
