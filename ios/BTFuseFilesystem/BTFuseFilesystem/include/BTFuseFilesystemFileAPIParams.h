@@ -18,15 +18,27 @@ limitations under the License.
 #ifndef BTFuseFilesystemFileAPIParams_h
 #define BTFuseFilesystemFileAPIParams_h
 
-#import <BTFuse/BTFuseError.h>
+#import <BTFuse/BTFuse.h>
 
 @interface BTFuseFilesystemFileAPIParams: NSObject
 
-- (instancetype) init NS_DESIGNATED_INITIALIZER;
+- (instancetype) init NS_UNAVAILABLE;
+- (instancetype) init:(NSNumber*) headerContentLength data:(NSData*) data NS_DESIGNATED_INITIALIZER;
 
 - (NSData*) getParams;
 - (NSNumber*) getContentLength;
-+ (BTFuseFilesystemFileAPIParams*) parse:(NSNumber*) contentLengthHv input:(NSInputStream*) io error:(BTFuseError**) error;
+//+ (BTFuseFilesystemFileAPIParams*) parse:(NSNumber*) contentLengthHv input:(NSInputStream*) io error:(BTFuseError**) error;
+
+@end
+
+//typedef void (^BTFuseFilesystemFileAPIParamsParserCallback)(BTFuseFilesystemFileAPIParams* params, BTFuseError* error);
+
+@interface BTFuseFilesystemFileAPIParamsParser: NSObject // <NSStreamDelegate>
+
+- (instancetype) init NS_UNAVAILABLE;
+//- (instancetype) init:(NSNumber*) contentLengthHv input:(NSInputStream*) io callback:(BTFuseFilesystemFileAPIParamsParserCallback) callback;
+//- (void) parse;
++ (BTFuseFilesystemFileAPIParams*) parse:(NSNumber*) contentLengthHv chunkSize:(uint32_t) chunkSize reader:(BTFuseStreamReader*) io error:(BTFuseError**) error;
 
 @end
 

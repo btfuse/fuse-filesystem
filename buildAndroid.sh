@@ -18,27 +18,7 @@ source build-tools/assertions.sh
 source build-tools/DirectoryTools.sh
 source build-tools/Checksum.sh
 
-assertMac "Mac is required to build Fuse Filesystem Android"
+MODULE_MARKET_NAME="FileSystem"
+MODULE_NAME="filesystem"
 
-echo "Building Fuse Filesystem Android Framework $(cat ./android/VERSION)..."
-
-rm -rf ./dist/android
-mkdir -p ./dist/android
-
-echo "Cleaning the workspace..."
-spushd android
-    gradle wrapper
-    assertLastCall
-    ./gradlew clean
-    assertLastCall
-    ./gradlew :filesystem:build
-    assertLastCall
-
-    cp filesystem/build/outputs/aar/*.aar ../dist/android/
-    assertLastCall
-spopd
-
-spushd dist/android
-    sha1_compute filesystem-debug.aar
-    sha1_compute filesystem-release.aar
-spopd
+source build-tools/buildAndroidModule.sh

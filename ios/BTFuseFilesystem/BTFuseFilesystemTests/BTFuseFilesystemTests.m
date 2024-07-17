@@ -31,6 +31,8 @@ limitations under the License.
 
 @implementation BTFuseFilesystemTests
 
+- (void) onBeforeWebviewLoad {}
+
 - (void) onContextReady:(BTFuseContext*) context {
     $apiBuilder = [[BTFuseTestAPIClientBuilder alloc] init];
     

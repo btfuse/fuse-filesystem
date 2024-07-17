@@ -1,3 +1,4 @@
+#!/bin/bash
 
 # Copyright 2023 Breautek 
 
@@ -13,9 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source build-tools/DepTools.sh
-source ./build-tools/GradleTools.sh
+source build-tools/assertions.sh
+source build-tools/DirectoryTools.sh
+source build-tools/Checksum.sh
 
-SyncDepFromGitHub "btfuse" "fuse-ios" "0.8.3" "BTFuse.xcframework.zip"
-SyncDepFromGitHub "btfuse" "fuse-ios" "0.8.3" "BTFuseTestTools.xcframework.zip"
-./syncGradle.sh
+MODULE_MARKET_NAME="FileSystem"
+MODULE_NAME="BTFuseFilesystem"
+MODULE_DESCRIPTION="FileSystem module for Fuse mobile framework"
+MODULE_REPO_NAME="fuse-filesystem"
+
+source build-tools/buildIOSModule.sh

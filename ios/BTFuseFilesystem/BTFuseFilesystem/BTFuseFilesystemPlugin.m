@@ -16,6 +16,7 @@ limitations under the License.
 */
 
 #import <Foundation/Foundation.h>
+#import <BTFuse/BTFuse.h>
 #import <BTFuseFilesystem/BTFuseFilesystemPlugin.h>
 #import "BTFuseFilesystemFileTypeHandler.h"
 #import <BTFuseFilesystem/BTFuseFilesystemFileType.h>
@@ -212,7 +213,6 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
     }
     
     uint64_t totalBytesRead = 0;
-    //int32_t bytesRead = 0;
     
     if (offset > 0) {
         [fileHandle seekToOffset: offset error: &error];
@@ -247,17 +247,19 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
 }
 
 - (void) handleFileTruncateRequest:(BTFuseAPIPacket*) packet response:(BTFuseAPIResponse*) response {
-    NSError* error = nil;
-    BTFuseError* fe = nil;
-    BTFuseFilesystemFileAPIParams* params = [BTFuseFilesystemFileAPIParams parse: [[NSNumber alloc] initWithUnsignedLong:[packet getContentLength]] input: [[packet getClient] getInputStream] error: &fe];
+    NSNumber* overallContentLength = [[NSNumber alloc] initWithUnsignedLong: [packet getContentLength]];
+    NSInputStream* readStream = [[packet getClient] getInputStream];
+    BTFuseStreamReader* reader = [[BTFuseStreamReader alloc] init: readStream];
+    BTFuseError* error = nil;
     
-    if (fe != nil) {
-        [response sendError: fe];
+    BTFuseFilesystemFileAPIParams* params = [BTFuseFilesystemFileAPIParamsParser parse: overallContentLength chunkSize: [self getChunkSize] reader: reader error: &error];
+    
+    if (error != nil) {
+        [response sendError: error];
         return;
     }
     
     NSString* path = [[NSString alloc] initWithData: [params getParams] encoding: NSUTF8StringEncoding];
-    
     NSFileHandle* fileHandle = [NSFileHandle fileHandleForWritingAtPath: path];
     
     if (!fileHandle) {
@@ -265,9 +267,11 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         return;
     }
     
-    [fileHandle truncateAtOffset: 0 error: &error];
-    if (error != nil) {
-        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: error]];
+    NSError* fileError = nil;
+    
+    [fileHandle truncateAtOffset: 0 error: &fileError];
+    if (fileError != nil) {
+        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
         return;
     }
     
@@ -279,7 +283,6 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         return;
     }
     
-    NSInputStream* readStream = [[packet getClient] getInputStream];
     uint32_t chunkSize = [self getChunkSize];
     
     if (chunkSize > contentLength) {
@@ -293,15 +296,25 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
     bool didError = false;
     
     while (true) {
-        uint64_t bytesToRead = contentLength - totalBytesRead;
-        if (bytesToRead == 0) {
+        uint64_t totalBytesToRead = contentLength - totalBytesRead;
+        
+        if (totalBytesToRead == 0) {
             break;
+        }
+        
+        uint32_t bytesToRead = 0;
+        if (totalBytesToRead > UINT32_MAX) {
+            bytesToRead = UINT32_MAX;
+        }
+        else {
+            bytesToRead = (uint32_t) totalBytesToRead;
         }
         
         if (bytesToRead > chunkSize) {
             bytesToRead = chunkSize;
         }
-        bytesRead = [readStream read:buffer maxLength: bytesToRead];
+        
+        bytesRead = [reader read: buffer maxBytes: bytesToRead];
         
         if (bytesRead == -1) {
             break;
@@ -309,10 +322,10 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         
         NSData* data = [[NSData alloc] initWithBytes: buffer length: bytesRead];
         totalBytesRead += bytesRead;
-        [fileHandle writeData: data error: &error];
+        [fileHandle writeData: data error: &fileError];
         bytesWritten += [data length];
         
-        if (error != nil) {
+        if (fileError != nil) {
             didError = true;
             break;
         }
@@ -321,7 +334,7 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
     [fileHandle closeFile];
     
     if (didError) {
-        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: error]];
+        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
         return;
     }
     
@@ -329,17 +342,19 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
 }
 
 - (void) handleFileAppendRequest:(BTFuseAPIPacket*) packet response:(BTFuseAPIResponse*) response {
-    NSError* error = nil;
-    BTFuseError* fe = nil;
-    BTFuseFilesystemFileAPIParams* params = [BTFuseFilesystemFileAPIParams parse: [[NSNumber alloc] initWithUnsignedLong:[packet getContentLength]] input: [[packet getClient] getInputStream] error: &fe];
+    NSNumber* overallContentLength = [[NSNumber alloc] initWithUnsignedLong: [packet getContentLength]];
+    NSInputStream* readStream = [[packet getClient] getInputStream];
+    BTFuseStreamReader* reader = [[BTFuseStreamReader alloc] init: readStream];
+    BTFuseError* error = nil;
     
-    if (fe != nil) {
-        [response sendError: fe];
+    BTFuseFilesystemFileAPIParams* params = [BTFuseFilesystemFileAPIParamsParser parse: overallContentLength chunkSize: [self getChunkSize] reader: reader error: &error];
+    
+    if (error != nil) {
+        [response sendError: error];
         return;
     }
     
     NSString* path = [[NSString alloc] initWithData: [params getParams] encoding: NSUTF8StringEncoding];
-    
     NSFileHandle* fileHandle = [NSFileHandle fileHandleForWritingAtPath: path];
     
     if (!fileHandle) {
@@ -347,26 +362,24 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         return;
     }
     
-    [fileHandle seekToEndReturningOffset:nil error:&error];
-    if (error != nil) {
-        [fileHandle closeFile];
-        [response sendError:[[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: error ]];
+    NSError* fileError = nil;
+    
+    [fileHandle seekToEndReturningOffset:nil error:&fileError];
+    if (fileError != nil) {
+        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
         return;
     }
     
-    NSNumber* contentLength = [params getContentLength];
-    
+    NSUInteger contentLength = [[params getContentLength] unsignedLongValue];
     if (contentLength == 0) {
         [fileHandle closeFile];
         [response sendString: @"0"];
         return;
     }
     
-    NSInputStream* readStream = [[packet getClient] getInputStream];
     uint32_t chunkSize = [self getChunkSize];
-    
-    if (chunkSize > [contentLength unsignedLongValue]) {
-        chunkSize = (uint32_t) [contentLength unsignedLongValue];
+    if (chunkSize > contentLength) {
+        chunkSize = (uint32_t) contentLength;
     }
     
     uint8_t buffer[chunkSize];
@@ -376,16 +389,25 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
     bool didError = false;
     
     while(true) {
-        uint64_t bytesToRead = [contentLength unsignedLongValue] - totalBytesRead;
+        uint64_t totalBytesToRead = contentLength - totalBytesRead;
+        
+        if (totalBytesToRead == 0) {
+            break;
+        }
+        
+        uint32_t bytesToRead = 0;
+        if (totalBytesToRead > UINT32_MAX) {
+            bytesToRead = UINT32_MAX;
+        }
+        else {
+            bytesToRead = (uint32_t) totalBytesToRead;
+        }
+        
         if (bytesToRead > chunkSize) {
             bytesToRead = chunkSize;
         }
         
-        if (bytesToRead == 0) {
-            break;
-        }
-        
-        bytesRead = [readStream read:buffer maxLength: bytesToRead];
+        bytesRead = [reader read: buffer maxBytes: bytesToRead];
         
         if (bytesRead == -1) {
             break;
@@ -393,7 +415,7 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         
         NSData* data = [[NSData alloc] initWithBytes: buffer length: bytesRead];
         totalBytesRead += bytesRead;
-        [fileHandle writeData: data error: &error];
+        [fileHandle writeData: data error: &fileError];
         bytesWritten += [data length];
         
         if (error != nil) {
@@ -405,7 +427,7 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
     [fileHandle closeFile];
     
     if (didError) {
-        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: error]];
+        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
         return;
     }
     
@@ -413,12 +435,15 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
 }
 
 - (void) handleFileWriteRequest:(BTFuseAPIPacket*) packet response:(BTFuseAPIResponse*) response {
-    NSError* error = nil;
-    BTFuseError* fe = nil;
-    BTFuseFilesystemFileAPIParams* params = [BTFuseFilesystemFileAPIParams parse: [[NSNumber alloc] initWithUnsignedLong:[packet getContentLength]] input: [[packet getClient] getInputStream] error: &fe];
+    NSNumber* overallContentLength = [[NSNumber alloc] initWithUnsignedLong: [packet getContentLength]];
+    NSInputStream* readStream = [[packet getClient] getInputStream];
+    BTFuseStreamReader* reader = [[BTFuseStreamReader alloc] init: readStream];
+    BTFuseError* error = nil;
     
-    if (fe != nil) {
-        [response sendError: fe];
+    BTFuseFilesystemFileAPIParams* params = [BTFuseFilesystemFileAPIParamsParser parse: overallContentLength chunkSize: [self getChunkSize] reader: reader error: &error];
+    
+    if (error != nil) {
+        [response sendError: error];
         return;
     }
     
@@ -428,9 +453,10 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         return;
     }
     
-    NSDictionary* opts = [NSJSONSerialization JSONObjectWithData: [params getParams] options: 0 error: &error];
-    if (error != nil) {
-        [response sendError:[[BTFuseError alloc] init: BTFUSE_FILESYSTEM_TAG withCode: 0 withError: error]];
+    NSError* jsonError = nil;
+    NSDictionary* opts = [NSJSONSerialization JSONObjectWithData: [params getParams] options: 0 error: &jsonError];
+    if (jsonError != nil) {
+        [response sendError:[[BTFuseError alloc] init: BTFUSE_FILESYSTEM_TAG withCode: 0 withError: jsonError]];
         return;
     }
     
@@ -453,15 +479,15 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         return;
     }
     
+    NSError* fileError = nil;
     if (offset != 0) {
-        [fileHandle seekToOffset: offset error: &error];
-        if (error != nil) {
-            [response sendError:[[BTFuseError alloc] init: BTFUSE_FILESYSTEM_TAG withCode: 0 withError: error]];
+        [fileHandle seekToOffset: offset error: &fileError];
+        if (fileError != nil) {
+            [response sendError:[[BTFuseError alloc] init: BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
             return;
         }
     }
     
-    NSInputStream* readStream = [[packet getClient] getInputStream];
     uint32_t chunkSize = [self getChunkSize];
     
     if (chunkSize > contentLength) {
@@ -475,16 +501,25 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
     bool didError = false;
     
     while(true) {
-        uint64_t bytesToRead = contentLength - totalBytesRead;
+        uint64_t totalBytesToRead = contentLength - totalBytesRead;
+        
+        if (totalBytesToRead == 0) {
+            break;
+        }
+        
+        uint32_t bytesToRead = 0;
+        if (totalBytesToRead > UINT32_MAX) {
+            bytesToRead = UINT32_MAX;
+        }
+        else {
+            bytesToRead = (uint32_t) totalBytesToRead;
+        }
+        
         if (bytesToRead > chunkSize) {
             bytesToRead = chunkSize;
         }
         
-        if (bytesToRead == 0) {
-            break;
-        }
-        
-        bytesRead = [readStream read:buffer maxLength: bytesToRead];
+        bytesRead = [reader read: buffer maxBytes: bytesToRead];
         
         if (bytesRead == -1) {
             break;
@@ -492,10 +527,10 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         
         NSData* data = [[NSData alloc] initWithBytes: buffer length: bytesRead];
         totalBytesRead += bytesRead;
-        [fileHandle writeData: data error: &error];
+        [fileHandle writeData: data error: &fileError];
         bytesWritten += [data length];
         
-        if (error != nil) {
+        if (fileError != nil) {
             didError = true;
             break;
         }
@@ -504,7 +539,7 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
     [fileHandle closeFile];
     
     if (didError) {
-        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: error]];
+        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
         return;
     }
     
