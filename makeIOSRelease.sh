@@ -30,7 +30,7 @@ fi
 VERSION="$1"
 
 assertVersion $VERSION
-assetGitTagAvailable "ios/$VERSION"
+assertGitTagAvailable "ios/$VERSION"
 
 echo $VERSION > ios/VERSION
 BUILD_NO=$(< "./ios/BUILD")

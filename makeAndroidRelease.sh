@@ -24,7 +24,7 @@ assertCleanRepo
 VERSION="$1"
 
 assertVersion $VERSION
-assetGitTagAvailable "android/$VERSION"
+assertGitTagAvailable "android/$VERSION"
 
 echo $VERSION > android/VERSION
 BUILD_NO=$(< "./android/BUILD")
