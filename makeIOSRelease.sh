@@ -16,6 +16,7 @@
 
 source build-tools/assertions.sh
 source build-tools/DirectoryTools.sh
+source build-tools/tests.sh
 
 assertMac "Mac is required for publishing"
 assertGitRepo
@@ -37,7 +38,7 @@ BUILD_NO=$((BUILD_NO + 1))
 echo $BUILD_NO > ./ios/BUILD
 
 ./buildIOS.sh
-./test.sh
+testIOS "Fuse iOS 17" "17.5" "iPhone 15" "BTFuseFilesystem" "BTFuseFilesystem"
 
 git add ios/VERSION ios/BUILD
 git commit -m "iOS Release: $VERSION"
