@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
     s.author        = { '$MODULE_NAME$' => 'norman@breautek.com' }
     s.license       = {
         :type => 'Apache-2.0',
-        :file => '$MODULE_NAME$.xcframework/ios-arm64/$MODULE_NAME$.framework/LICENSE'
+        :file => '$MODULE_NAME$.xcframework/LICENSE'
     }
 
     s.ios.deployment_target = '15.0'
