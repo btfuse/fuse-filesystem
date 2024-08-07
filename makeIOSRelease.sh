@@ -14,46 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source build-tools/assertions.sh
-source build-tools/DirectoryTools.sh
-source build-tools/tests.sh
+source build-tools/makeIOSModuleRelease.sh
 
-assertMac "Mac is required for publishing"
-assertGitRepo
-assertCleanRepo
+MODULE_MARKET_NAME="FileSystem"
+MODULE_NAME="BTFuseFilesystem"
+MODULE_DESCRIPTION="FileSystem module for Fuse mobile framework"
+MODULE_REPO_NAME="fuse-filesystem"
+MODULE_VERSION="$1"
 
-if [ -z "$BTFUSE_CODESIGN_IDENTITY" ]; then
-    echo "BTFUSE_CODESIGN_IDENTITY environment variable is required."
-    exit 2
-fi
-
-VERSION="$1"
-
-assertVersion $VERSION
-assertGitTagAvailable "ios/$VERSION"
-
-echo $VERSION > ios/VERSION
-BUILD_NO=$(< "./ios/BUILD")
-BUILD_NO=$((BUILD_NO + 1))
-echo $BUILD_NO > ./ios/BUILD
-
-./buildIOS.sh
-testIOS "Fuse iOS 17" "17.5" "iPhone 15" "BTFuseFilesystem" "BTFuseFilesystem"
-
-git add ios/VERSION ios/BUILD
-git commit -m "iOS Release: $VERSION"
-git push
-git tag -a ios/$VERSION -m "iOS Release: $VERSION"
-git push --tags
-
-gh release create ios/$VERSION \
-    ./dist/ios/BTFuseFilesystem.xcframework.zip \
-    ./dist/ios/BTFuseFilesystem.xcframework.zip.sha1.txt \
-    ./dist/ios/BTFuseFilesystem.framework.dSYM.zip \
-    ./dist/ios/BTFuseFilesystem.framework.dSYM.zip.sha1.txt \
-    --verify-tag --generate-notes
-
-pod spec lint BTFuseFilesystem.podspec
-assertLastCall
-
-pod repo push breautek BTFuseFilesystem.podspec
+source build-tools/makeIOSModuleRelease.sh
