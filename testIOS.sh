@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2023 Breautek 
+# Copyright 2023-2024 Breautek 
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+source build-tools/tests.sh
 source build-tools/assertions.sh
-source build-tools/DirectoryTools.sh
-source build-tools/Checksum.sh
-
-source build-tools/buildIOSModule.sh
+source build-tools/testIOS.sh
