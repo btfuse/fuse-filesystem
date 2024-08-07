@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source build-tools/makeIOSModuleRelease.sh
-
 MODULE_MARKET_NAME="FileSystem"
 MODULE_NAME="BTFuseFilesystem"
 MODULE_DESCRIPTION="FileSystem module for Fuse mobile framework"
