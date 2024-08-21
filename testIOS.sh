@@ -17,3 +17,5 @@
 source build-tools/tests.sh
 source build-tools/assertions.sh
 source build-tools/testIOS.sh
+
+testIOS $1 $2 $3
