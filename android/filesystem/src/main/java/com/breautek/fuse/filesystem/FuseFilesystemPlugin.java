@@ -17,6 +17,8 @@ limitations under the License.
 
 package com.breautek.fuse.filesystem;
 
+import androidx.annotation.NonNull;
+
 import com.breautek.fuse.FuseContext;
 import com.breautek.fuse.FusePlugin;
 import com.breautek.fuse.filesystem.handlers.FileAppendHandler;
@@ -32,10 +34,20 @@ import com.breautek.fuse.filesystem.handlers.FileWriteHandler;
 public class FuseFilesystemPlugin extends FusePlugin {
     public static final int DEFAULT_CHUNK_SIZE = 4194304; // 4mb
     private int $chunkSize;
+    private @NonNull FuseFSAPIFactory $fsapiFactory;
 
     public FuseFilesystemPlugin(FuseContext context) {
         super(context);
         $chunkSize = DEFAULT_CHUNK_SIZE;
+        $fsapiFactory = new FuseFSAPIFactory();
+    }
+
+    public void setFSAPIFactory(@NonNull FuseFSAPIFactory apiFactory) {
+        $fsapiFactory = apiFactory;
+    }
+
+    public @NonNull FuseFSAPIFactory getFSAPIFactory() {
+        return $fsapiFactory;
     }
 
     /**

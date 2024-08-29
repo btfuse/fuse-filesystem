@@ -209,7 +209,7 @@ public class FuseFilesystemPluginTest {
                         .setPluginID("FuseFilesystem")
                         .setType("text/plain")
                         .setEndpoint("/file/type")
-                        .setContent("/")
+                        .setContent("file:///")
                         .build();
             }
             catch (Exception e) {
@@ -250,7 +250,7 @@ public class FuseFilesystemPluginTest {
                         .setPluginID("FuseFilesystem")
                         .setType("text/plain")
                         .setEndpoint("/file/size")
-                        .setContent("/data/data/com.breautek.fuse.filesystem.test/files/sizeTestFile")
+                        .setContent("file:///data/data/com.breautek.fuse.filesystem.test/files/sizeTestFile")
                         .build();
             }
             catch (Exception e) {
@@ -275,7 +275,7 @@ public class FuseFilesystemPluginTest {
             FuseTestAPIClient client;
             try {
                 JSONObject content = new JSONObject();
-                content.put("path", "/data/data/com.breautek.fuse.filesystem.test/files/mkdirTest");
+                content.put("path", "file:///data/data/com.breautek.fuse.filesystem.test/files/mkdirTest");
                 content.put("recursive", false);
                 client = new FuseTestAPIClient.Builder()
                         .setFuseContext(activity.getFuseContext())
@@ -309,7 +309,7 @@ public class FuseFilesystemPluginTest {
             FuseTestAPIClient client;
             try {
                 JSONObject content = new JSONObject();
-                content.put("path", "/data/data/com.breautek.fuse.filesystem.test/files/mkdirRecursionTest/with/subfolders");
+                content.put("path", "file:///data/data/com.breautek.fuse.filesystem.test/files/mkdirRecursionTest/with/subfolders");
                 content.put("recursive", true);
                 client = new FuseTestAPIClient.Builder()
                         .setFuseContext(activity.getFuseContext())
@@ -343,7 +343,7 @@ public class FuseFilesystemPluginTest {
             FuseTestAPIClient client;
             try {
                 JSONObject content = new JSONObject();
-                content.put("path", "/data/data/com.breautek.fuse.filesystem.test/files/readTest");
+                content.put("path", "file:///data/data/com.breautek.fuse.filesystem.test/files/readTest");
                 content.put("length", -1);
                 content.put("offset", 0);
                 client = new FuseTestAPIClient.Builder()
@@ -378,7 +378,7 @@ public class FuseFilesystemPluginTest {
             FuseTestAPIClient client;
             try {
                 JSONObject content = new JSONObject();
-                content.put("path", "/data/data/com.breautek.fuse.filesystem.test/files/readTest");
+                content.put("path", "file:///data/data/com.breautek.fuse.filesystem.test/files/readTest");
                 content.put("length", 2);
                 content.put("offset", 0);
                 client = new FuseTestAPIClient.Builder()
@@ -412,7 +412,7 @@ public class FuseFilesystemPluginTest {
             FuseTestAPIClient client;
             try {
                 JSONObject content = new JSONObject();
-                content.put("path", "/data/data/com.breautek.fuse.filesystem.test/files/readTest");
+                content.put("path", "file:///data/data/com.breautek.fuse.filesystem.test/files/readTest");
                 content.put("length", 2);
                 content.put("offset", 1);
                 client = new FuseTestAPIClient.Builder()
@@ -443,7 +443,7 @@ public class FuseFilesystemPluginTest {
             int port = activity.getFuseContext().getAPIPort();
             String secret = activity.getFuseContext().getAPISecret();
 
-            String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/truncateTest1";
+            String testFile = "file:///data/data/com.breautek.fuse.filesystem.test/files/truncateTest1";
 
             FuseTestAPIClient client;
             try {
@@ -476,7 +476,7 @@ public class FuseFilesystemPluginTest {
             int port = activity.getFuseContext().getAPIPort();
             String secret = activity.getFuseContext().getAPISecret();
 
-            String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/truncateTest1";
+            String testFile = "file:///data/data/com.breautek.fuse.filesystem.test/files/truncateTest1";
 
             byte [] newContent = "new content".getBytes();
 
@@ -532,7 +532,7 @@ public class FuseFilesystemPluginTest {
             int port = activity.getFuseContext().getAPIPort();
             String secret = activity.getFuseContext().getAPISecret();
 
-            String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/appendFileTest";
+            String testFile = "file:///data/data/com.breautek.fuse.filesystem.test/files/appendFileTest";
 
             byte [] newContent = " + more data!".getBytes();
 
@@ -590,7 +590,7 @@ public class FuseFilesystemPluginTest {
             int port = activity.getFuseContext().getAPIPort();
             String secret = activity.getFuseContext().getAPISecret();
 
-            String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/writeFileTest";
+            String testFile = "file:///data/data/com.breautek.fuse.filesystem.test/files/writeFileTest";
 
             JSONObject jparams = new JSONObject();
             try {
@@ -657,7 +657,7 @@ public class FuseFilesystemPluginTest {
             int port = activity.getFuseContext().getAPIPort();
             String secret = activity.getFuseContext().getAPISecret();
 
-            String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/writeFileTestWithOffset";
+            String testFile = "file:///data/data/com.breautek.fuse.filesystem.test/files/writeFileTestWithOffset";
 
             JSONObject jparams = new JSONObject();
             try {
@@ -724,7 +724,7 @@ public class FuseFilesystemPluginTest {
             int port = activity.getFuseContext().getAPIPort();
             String secret = activity.getFuseContext().getAPISecret();
 
-            String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/removeFileTest";
+            String testFile = "file:///data/data/com.breautek.fuse.filesystem.test/files/removeFileTest";
 
             FuseTestAPIClient client;
             try {
@@ -765,7 +765,7 @@ public class FuseFilesystemPluginTest {
             int port = activity.getFuseContext().getAPIPort();
             String secret = activity.getFuseContext().getAPISecret();
 
-            String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/doesNotExists";
+            String testFile = "file:///data/data/com.breautek.fuse.filesystem.test/files/doesNotExists";
 
             FuseTestAPIClient client;
             try {
@@ -802,7 +802,7 @@ public class FuseFilesystemPluginTest {
             int port = activity.getFuseContext().getAPIPort();
             String secret = activity.getFuseContext().getAPISecret();
 
-            String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/removeRecursiveTest/abc/def";
+            String testFile = "file:///data/data/com.breautek.fuse.filesystem.test/files/removeRecursiveTest/abc/def";
 
             FuseTestAPIClient client;
             try {
@@ -843,7 +843,7 @@ public class FuseFilesystemPluginTest {
             int port = activity.getFuseContext().getAPIPort();
             String secret = activity.getFuseContext().getAPISecret();
 
-            String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/appendFileTest";
+            String testFile = "file:///data/data/com.breautek.fuse.filesystem.test/files/appendFileTest";
 
             FuseTestAPIClient client;
             try {
@@ -879,7 +879,7 @@ public class FuseFilesystemPluginTest {
             int port = activity.getFuseContext().getAPIPort();
             String secret = activity.getFuseContext().getAPISecret();
 
-            String testFile = "/data/data/com.breautek.fuse.filesystem.test/files/doesNotExists";
+            String testFile = "file:///data/data/com.breautek.fuse.filesystem.test/files/doesNotExists";
 
             FuseTestAPIClient client;
             try {

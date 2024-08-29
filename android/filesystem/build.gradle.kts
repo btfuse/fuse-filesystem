@@ -34,8 +34,8 @@ android {
 }
 
 dependencies {
-    compileOnly("com.breautek.fuse:core:0.8.6")
-    androidTestImplementation("com.breautek.fuse:core:0.8.6")
+    compileOnly("com.breautek.fuse:core:0.8.8")
+    androidTestImplementation("com.breautek.fuse:core:0.8.8")
     androidTestImplementation("com.breautek.fuse:test-tools:0.0.2")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
