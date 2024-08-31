@@ -65,4 +65,77 @@ public class FSAPI implements IFSAPI {
 
         return bytesWritten;
     }
+
+    public boolean delete(Uri uri, boolean recursive) throws FuseError {
+        String path = $parseUri(uri);
+        File file = new File(path);
+
+        if (!file.exists()) {
+            return false;
+        }
+
+        boolean didDelete = false;
+        if (recursive) {
+            didDelete = FileUtils.deleteRecursively(file);
+        }
+        else {
+            didDelete = file.delete();
+        }
+
+        return didDelete;
+    }
+
+    public FuseFileType getType(Uri uri) throws FuseError {
+        String path = $parseUri(uri);
+        File file = new File(path);
+
+        if (!file.exists()) {
+            throw new FuseError("FuseFilesystem", 0, "No such file found at \"" + path + "\"");
+        }
+
+        FuseFileType type = null;
+        if (file.isFile()) {
+            type = FuseFileType.FILE;
+        }
+        else if (file.isDirectory()) {
+            type = FuseFileType.DIRECTORY;
+        }
+
+        return type;
+    }
+
+    public boolean exists(Uri uri) throws FuseError {
+        File file = new File($parseUri(uri));
+        return file.exists();
+    }
+
+    public long getSize(Uri uri) throws FuseError {
+        String path = $parseUri(uri);
+        File file = new File(path);
+
+        if (!file.exists()) {
+            throw new FuseError("FuseFilesystem", 0, "No such file found at \"" + path + "\"");
+        }
+
+        return file.length();
+    }
+
+    public boolean mkdir(Uri uri, boolean recursive) throws FuseError {
+        String path = $parseUri(uri);
+        File file = new File(path);
+
+        boolean didCreate;
+        try {
+            if (recursive) {
+                didCreate = file.mkdirs();
+            } else {
+                didCreate = file.mkdir();
+            }
+        }
+        catch (SecurityException error) {
+            throw new FuseError("FuseFileystem", 0, "Permission denied.", error);
+        }
+
+        return didCreate;
+    }
 }

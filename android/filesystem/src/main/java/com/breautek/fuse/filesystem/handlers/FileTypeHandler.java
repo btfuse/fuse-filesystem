@@ -17,12 +17,15 @@ limitations under the License.
 
 package com.breautek.fuse.filesystem.handlers;
 
+import android.net.Uri;
+
 import com.breautek.fuse.FuseAPIPacket;
 import com.breautek.fuse.FuseAPIResponse;
 import com.breautek.fuse.FuseError;
 import com.breautek.fuse.FusePlugin.APIHandler;
 import com.breautek.fuse.filesystem.FuseFileType;
 import com.breautek.fuse.filesystem.FuseFilesystemPlugin;
+import com.breautek.fuse.filesystem.IFSAPI;
 
 import org.json.JSONException;
 
@@ -37,24 +40,18 @@ public class FileTypeHandler extends APIHandler<FuseFilesystemPlugin> {
     @Override
     public void execute(FuseAPIPacket packet, FuseAPIResponse response) throws IOException, JSONException {
         String path = packet.readAsString();
-
-        File file = new File(path);
-
-        if (!file.exists()) {
-            response.send(new FuseError("FuseFilesystem", 0, "No such file found at \"" + path + "\""));
-            return;
-        }
+        Uri uri = Uri.parse(path);
+        IFSAPI fsapi = this.plugin.getFSAPIFactory().get(uri);
 
         FuseFileType type = null;
-        if (file.isFile()) {
-            type = FuseFileType.FILE;
+        try {
+            type = fsapi.getType(uri);
+            if (type == null) {
+                throw new FuseError("FuseFilesystem", 0, "Unsupported file type.");
+            }
         }
-        else if (file.isDirectory()) {
-            type = FuseFileType.DIRECTORY;
-        }
-
-        if (type == null) {
-            response.send(new FuseError("FuseFilesystem", 0, "Unsupported file type."));
+        catch (FuseError error) {
+            response.send(error);
             return;
         }
 

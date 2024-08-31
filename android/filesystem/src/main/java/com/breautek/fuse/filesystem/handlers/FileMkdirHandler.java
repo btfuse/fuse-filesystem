@@ -17,11 +17,14 @@ limitations under the License.
 
 package com.breautek.fuse.filesystem.handlers;
 
+import android.net.Uri;
+
 import com.breautek.fuse.FuseAPIPacket;
 import com.breautek.fuse.FuseAPIResponse;
 import com.breautek.fuse.FuseError;
 import com.breautek.fuse.FusePlugin.APIHandler;
 import com.breautek.fuse.filesystem.FuseFilesystemPlugin;
+import com.breautek.fuse.filesystem.IFSAPI;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,15 +41,16 @@ public class FileMkdirHandler extends APIHandler<FuseFilesystemPlugin> {
     public void execute(FuseAPIPacket packet, FuseAPIResponse response) throws IOException, JSONException {
         JSONObject params = packet.readAsJSONObject();
         boolean recursive = params.getBoolean("recursive");
+        Uri uri = Uri.parse(params.getString("path"));
+        IFSAPI fsapi = this.plugin.getFSAPIFactory().get(uri);
 
-        File file = new File(params.getString("path"));
-
-        boolean didCreate = false;
-        if (recursive) {
-            didCreate = file.mkdirs();
+        boolean didCreate;
+        try {
+            didCreate = fsapi.mkdir(uri, recursive);
         }
-        else {
-            didCreate = file.mkdir();
+        catch (FuseError error) {
+            response.send(error);
+            return;
         }
 
         response.send(didCreate ? "true" : "false");

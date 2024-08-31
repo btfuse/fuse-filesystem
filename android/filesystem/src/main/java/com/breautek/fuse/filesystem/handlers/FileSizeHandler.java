@@ -17,11 +17,14 @@ limitations under the License.
 
 package com.breautek.fuse.filesystem.handlers;
 
+import android.net.Uri;
+
 import com.breautek.fuse.FuseAPIPacket;
 import com.breautek.fuse.FuseAPIResponse;
 import com.breautek.fuse.FuseError;
 import com.breautek.fuse.FusePlugin.APIHandler;
 import com.breautek.fuse.filesystem.FuseFilesystemPlugin;
+import com.breautek.fuse.filesystem.IFSAPI;
 
 import org.json.JSONException;
 
@@ -36,15 +39,17 @@ public class FileSizeHandler extends APIHandler<FuseFilesystemPlugin> {
     @Override
     public void execute(FuseAPIPacket packet, FuseAPIResponse response) throws IOException, JSONException {
         String path = packet.readAsString();
+        Uri uri = Uri.parse(path);
+        IFSAPI fsapi = this.plugin.getFSAPIFactory().get(uri);
 
-        File file = new File(path);
-
-        if (!file.exists()) {
-            response.send(new FuseError("FuseFilesystem", 0, "No such file found at \"" + path + "\""));
+        long size;
+        try {
+            size = fsapi.getSize(uri);
+        }
+        catch (FuseError error) {
+            response.send(error);
             return;
         }
-
-        long size = file.length();
 
         response.send(Long.toString(size));
     }
