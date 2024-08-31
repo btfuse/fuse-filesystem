@@ -17,11 +17,14 @@ limitations under the License.
 
 package com.breautek.fuse.filesystem.handlers;
 
+import android.net.Uri;
+
 import com.breautek.fuse.FuseAPIPacket;
 import com.breautek.fuse.FuseAPIResponse;
 import com.breautek.fuse.FuseError;
 import com.breautek.fuse.FusePlugin.APIHandler;
 import com.breautek.fuse.filesystem.FuseFilesystemPlugin;
+import com.breautek.fuse.filesystem.IFSAPI;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,67 +46,30 @@ public class FileReadHandler extends APIHandler<FuseFilesystemPlugin> {
         long offset = params.getLong("offset");
 
         String path = params.getString("path");
-        File file = new File(path);
+        Uri uri = Uri.parse(path);
 
-        if (!file.exists()) {
-            response.send(new FuseError("FuseFilesystem", 0, "No such file found at \"" + path + "\""));
-            return;
-        }
+        IFSAPI fsapi = this.plugin.getFSAPIFactory().get(uri);
 
-        long fileSize = file.length();
-        long contentLength = 0;
-        if (desiredLength == -1) {
-            contentLength = fileSize;
-        }
-        else {
-            contentLength = Math.min(desiredLength, fileSize);
-        }
-
-        if (contentLength + offset > fileSize) {
-            contentLength -= (contentLength + offset) - fileSize;
-        }
-
-        if (contentLength == 0) {
-            response.send();
-            return;
-        }
-
-        int chunkSize = this.plugin.getChunkSize();
-        if (chunkSize > contentLength) {
-            chunkSize = (int) contentLength;
-        }
-
-        response.sendHeaders(200, "application/octet-stream", contentLength);
-
-        long totalBytesRead = 0;
-        int bytesRead = 0;
-        byte[] buffer = new byte[chunkSize];
-
-        FileInputStream io = new FileInputStream(file);
         try {
-            if (offset > 0) {
-                io.skip(offset);
-            }
-            while (totalBytesRead < contentLength && (bytesRead = io.read(buffer)) != -1) {
-                if (bytesRead < chunkSize) {
-                    byte[] b = new byte[bytesRead];
-                    System.arraycopy(buffer, 0, b, 0, bytesRead);
-                    response.pushData(b);
+            fsapi.read(uri, desiredLength, offset, this.plugin.getChunkSize(), new IFSAPI.IReadCallback() {
+                @Override
+                public void onReadStart(long contentLength) {
+                    response.sendHeaders(200, "application/octet-stream", contentLength);
                 }
-                else {
+
+                @Override
+                public void onReadChunk(int bufferSize, byte[] buffer) {
                     response.pushData(buffer);
                 }
 
-                totalBytesRead += bytesRead;
-            }
+                @Override
+                public void onReadClose() {
+                    response.didFinish();
+                }
+            });
         }
-        catch (Exception e) {
-            io.close();
-            throw e;
+        catch (FuseError error) {
+            response.send(error);
         }
-
-        io.close();
-
-        response.didFinish();
     }
 }

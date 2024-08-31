@@ -5,6 +5,7 @@ import android.net.Uri;
 import com.breautek.fuse.FuseError;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -137,5 +138,74 @@ public class FSAPI implements IFSAPI {
         }
 
         return didCreate;
+    }
+
+    public long read(Uri uri, long desiredLength, long offset, int chunkSize, IReadCallback callback) throws FuseError {
+        String path = $parseUri(uri);
+        File file = new File(path);
+
+        if (!file.exists()) {
+            throw new FuseError("FuseFilesystem", 0, "No such file found at \"" + path + "\"");
+        }
+
+        long fileSize = file.length();
+
+        long contentLength = 0;
+        if (desiredLength == -1) {
+            contentLength = fileSize;
+        }
+        else {
+            contentLength = Math.min(desiredLength, fileSize);
+        }
+
+        if (contentLength + offset > fileSize) {
+            contentLength -= (contentLength + offset) - fileSize;
+        }
+
+        if (contentLength == 0) {
+            return 0;
+        }
+
+        if (chunkSize > contentLength) {
+            chunkSize = (int) contentLength;
+        }
+
+        callback.onReadStart(contentLength);
+
+        long totalBytesRead = 0;
+        int bytesRead = 0;
+        byte[] buffer = new byte[chunkSize];
+
+        FileInputStream io = null;
+        try {
+            io = new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            throw new FuseError("FuseFilesystem", 0, "File not found", e);
+        }
+
+        try {
+            if (offset > 0) {
+                io.skip(offset);
+            }
+            while (totalBytesRead < contentLength && (bytesRead = io.read(buffer)) != -1) {
+                if (bytesRead < chunkSize) {
+                    byte[] b = new byte[bytesRead];
+                    System.arraycopy(buffer, 0, b, 0, bytesRead);
+                    callback.onReadChunk(bytesRead, b);
+                }
+                else {
+                    callback.onReadChunk(chunkSize, buffer);
+                }
+
+                totalBytesRead += bytesRead;
+            }
+
+            io.close();
+        }
+        catch (IOException e) {
+            throw new FuseError("FuseFilesystem", 0, "Read error", e);
+        }
+
+        return totalBytesRead;
     }
 }

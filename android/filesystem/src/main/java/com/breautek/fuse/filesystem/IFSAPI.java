@@ -18,4 +18,12 @@ public interface IFSAPI {
     long getSize(Uri uri) throws FuseError;
 
     boolean mkdir(Uri uri, boolean recursive) throws FuseError;
+
+    interface IReadCallback {
+        void onReadStart(long contentLength);
+        void onReadChunk(int bufferSize, byte[] buffer);
+        void onReadClose();
+    }
+
+    long read(Uri uri, long length, long offset, int chunkSize, IReadCallback callback) throws FuseError;
 }
