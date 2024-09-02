@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.ManagedVirtualDevice
+
 plugins {
     id("com.android.library")
     id("maven-publish")
@@ -29,6 +31,62 @@ android {
     publishing {
         singleVariant("release") {
             withSourcesJar()
+        }
+    }
+
+    testOptions {
+        targetSdk = 34
+
+        managedDevices {
+            devices {
+                register("api27", ManagedVirtualDevice::class) {
+                    device = "Pixel 7"
+                    apiLevel = 27
+                    systemImageSource = "aosp"
+                }
+
+                register("api28", ManagedVirtualDevice::class) {
+                    device = "Pixel 7"
+                    apiLevel = 28
+                    systemImageSource = "aosp"
+                }
+
+                register("api29", ManagedVirtualDevice::class) {
+                    device = "Pixel 7"
+                    apiLevel = 29
+                    systemImageSource = "aosp"
+                }
+
+                register("api30", ManagedVirtualDevice::class) {
+                    device = "Pixel 7"
+                    apiLevel = 30
+                    systemImageSource = "aosp"
+                }
+
+                register("api31", ManagedVirtualDevice::class) {
+                    device = "Pixel 7"
+                    apiLevel = 31
+                    systemImageSource = "aosp"
+                }
+
+                register("api32", ManagedVirtualDevice::class) {
+                    device = "Pixel 7"
+                    apiLevel = 32
+                    systemImageSource = "aosp"
+                }
+
+                register("api33", ManagedVirtualDevice::class) {
+                    device = "Pixel 7"
+                    apiLevel = 33
+                    systemImageSource = "aosp"
+                }
+
+                register("api34", ManagedVirtualDevice::class) {
+                    device = "Pixel 7"
+                    apiLevel = 34
+                    systemImageSource = "google"
+                }
+            }
         }
     }
 }
