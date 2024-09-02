@@ -25,13 +25,16 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
-    - name: Change to Android Directory
-      run: cd android
     - name: Grant execute permission for gradlew
       run: chmod +x ./gradlew
+      working-directory: ./android
     - name: Accept Android SDK Licenses
       run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
     - name: Build with Gradle
-      run: ./gradlew :fuse:build
+      run: ./gradlew build
+      working-directory: ./android
+    # - name: Run Tests
+    #   run: ./gradlew api34DebugAndroidTest
+    #   working-directory: ./android
     - name: Run Tests
-      run: ./gradlew :fuse:api34DebugAndroidTest
+      run: ./testAndroid.sh android
