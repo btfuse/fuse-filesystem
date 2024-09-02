@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 
 public class FSAPI implements IFSAPI {
     public static final String ERROR_TAG = "FuseFilesystem";
@@ -207,5 +208,111 @@ public class FSAPI implements IFSAPI {
         }
 
         return totalBytesRead;
+    }
+
+    public long write(Uri uri, long offset, int chunkSize, InputStream input, long contentLength) throws FuseError {
+        String path = $parseUri(uri);
+        File file = new File(path);
+
+        long bytesWritten = 0;
+
+        try {
+            RandomAccessFile io = new RandomAccessFile(file, "rw");
+            if (offset > 0) {
+                io.seek(offset);
+            }
+
+            if (contentLength > 0) {
+                if (chunkSize > contentLength) {
+                    chunkSize = (int) contentLength;
+                }
+
+                byte[] buffer = new byte[chunkSize];
+                long totalBytesRead = 0;
+                int bytesRead = 0;
+                while (true) {
+                    long bytesToRead = contentLength - totalBytesRead;
+                    if (bytesToRead >= chunkSize) {
+                        bytesRead = input.read(buffer);
+                    } else {
+                        buffer = new byte[bytesRead];
+                        bytesRead = input.read(buffer);
+                    }
+
+                    if (bytesRead == -1) {
+                        break;
+                    }
+
+                    totalBytesRead += bytesRead;
+                    io.write(buffer);
+                    bytesWritten += buffer.length;
+
+                    if (totalBytesRead == contentLength) {
+                        break;
+                    }
+                }
+            }
+
+            io.close();
+        }
+        catch (FileNotFoundException e) {
+            throw new FuseError("FuseFilesystem", 0, "No such file found at \"" + path + "\"", e);
+        }
+        catch (IOException e) {
+            throw new FuseError("FuseFilesystem", 0, "IO Error", e);
+        }
+
+        return bytesWritten;
+    }
+
+    public long truncate(Uri uri, long contentLength, InputStream input, int chunkSize) throws FuseError {
+        String path = $parseUri(uri);
+        File file = new File(path);
+
+        long bytesWritten = 0;
+
+        try {
+            RandomAccessFile io = new RandomAccessFile(file, "rw");
+            io.setLength(0);
+            if (contentLength > 0) {
+                if (chunkSize > contentLength) {
+                    chunkSize = (int) contentLength;
+                }
+                byte[] buffer = new byte[chunkSize];
+                long totalBytesRead = 0;
+                int bytesRead = 0;
+                while (true) {
+                    long bytesToRead = contentLength - totalBytesRead;
+                    if (bytesToRead >= chunkSize) {
+                        bytesRead = input.read(buffer);
+                    } else {
+                        buffer = new byte[bytesRead];
+                        bytesRead = input.read(buffer);
+                    }
+
+                    if (bytesRead == -1) {
+                        break;
+                    }
+
+                    totalBytesRead += bytesRead;
+                    io.write(buffer);
+                    bytesWritten += buffer.length;
+
+                    if (totalBytesRead == contentLength) {
+                        break;
+                    }
+                }
+            }
+
+            io.close();
+        }
+        catch (FileNotFoundException ex) {
+            throw new FuseError("FuseFilesystem", 0, "No such file found at \"" + path + "\"", ex);
+        }
+        catch (IOException ex) {
+            throw new FuseError("FuseFilesystem", 0, "IO Error", ex);
+        }
+
+        return bytesWritten;
     }
 }

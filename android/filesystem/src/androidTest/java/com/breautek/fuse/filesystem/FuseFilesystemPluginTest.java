@@ -19,6 +19,8 @@ package com.breautek.fuse.filesystem;
 
 import static org.junit.Assert.*;
 
+import android.net.Uri;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import com.breautek.fuse.testtools.FuseTestAPIClient;
@@ -81,20 +83,20 @@ public class FuseFilesystemPluginTest {
     }
 
     private static void setupWriteFile() throws IOException {
-        File appendFile = new File("/data/data/com.breautek.fuse.filesystem.test/files/writeFileTest");
-        File appendOffsetFile = new File("/data/data/com.breautek.fuse.filesystem.test/files/writeFileTestWithOffset");
-        if (appendFile.exists()) {
-            appendFile.delete();
+        File writeFile = new File("/data/data/com.breautek.fuse.filesystem.test/files/writeFileTest");
+        File writeOffsetFile = new File("/data/data/com.breautek.fuse.filesystem.test/files/writeFileTestWithOffset");
+        if (writeFile.exists()) {
+            writeFile.delete();
         }
 
-        if (appendOffsetFile.exists()) {
-            appendOffsetFile.delete();
+        if (writeOffsetFile.exists()) {
+            writeOffsetFile.delete();
         }
 
-        boolean _unused = appendFile.createNewFile();
-        _unused = appendOffsetFile.createNewFile();
-        FileOutputStream io = new FileOutputStream(appendFile, false);
-        FileOutputStream appendIO = new FileOutputStream(appendOffsetFile, false);
+        boolean _unused = writeFile.createNewFile();
+        _unused = writeOffsetFile.createNewFile();
+        FileOutputStream io = new FileOutputStream(writeFile, false);
+        FileOutputStream appendIO = new FileOutputStream(writeOffsetFile, false);
 
         String content = "Initial State!";
         byte[] buffer = content.getBytes();
@@ -464,7 +466,7 @@ public class FuseFilesystemPluginTest {
             FuseTestAPIClient.FuseAPITestResponse response = client.execute();
             assertEquals(200, response.getStatus());
 
-            File file = new File(testFile);
+            File file = new File(Uri.parse(testFile).getPath());
 
             assertEquals(0, file.length());
         });
@@ -499,7 +501,7 @@ public class FuseFilesystemPluginTest {
             FuseTestAPIClient.FuseAPITestResponse response = client.execute();
             assertEquals(200, response.getStatus());
 
-            File file = new File(testFile);
+            File file = new File(Uri.parse(testFile).getPath());
 
             assertEquals(newContent.length, file.length());
 
@@ -559,7 +561,7 @@ public class FuseFilesystemPluginTest {
 
             assertEquals(newContent.length, reportedBytesWritten);
 
-            File file = new File(testFile);
+            File file = new File(Uri.parse(testFile).getPath());
 
             String newContentStr = null;
             FileReader reader = null;
@@ -626,7 +628,7 @@ public class FuseFilesystemPluginTest {
 
             assertEquals(newContent.length, reportedBytesWritten);
 
-            File file = new File(testFile);
+            File file = new File(Uri.parse(testFile).getPath());
 
             String newContentStr = null;
             FileReader reader = null;
@@ -693,7 +695,7 @@ public class FuseFilesystemPluginTest {
 
             assertEquals(newContent.length, reportedBytesWritten);
 
-            File file = new File(testFile);
+            File file = new File(Uri.parse(testFile).getPath());
 
             String newContentStr = null;
             FileReader reader = null;
@@ -753,7 +755,7 @@ public class FuseFilesystemPluginTest {
 
             assertEquals("true", result);
 
-            File file = new File(testFile);
+            File file = new File(Uri.parse(testFile).getPath());
 
             assertFalse(file.exists());
         });
@@ -831,7 +833,7 @@ public class FuseFilesystemPluginTest {
 
             assertEquals("true", result);
 
-            File file = new File(testFile);
+            File file = new File(Uri.parse(testFile).getPath());
 
             assertFalse(file.exists());
         });
@@ -868,7 +870,7 @@ public class FuseFilesystemPluginTest {
 
             assertEquals("true", result);
 
-            File file = new File(testFile);
+            File file = new File(Uri.parse(testFile).getPath());
             assertTrue(file.exists());
         });
     }
@@ -904,7 +906,7 @@ public class FuseFilesystemPluginTest {
 
             assertEquals("false", result);
 
-            File file = new File(testFile);
+            File file = new File(Uri.parse(testFile).getPath());
             assertFalse(file.exists());
         });
     }

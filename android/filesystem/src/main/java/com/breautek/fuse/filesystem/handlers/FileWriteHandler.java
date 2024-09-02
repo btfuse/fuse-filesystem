@@ -17,12 +17,15 @@ limitations under the License.
 
 package com.breautek.fuse.filesystem.handlers;
 
+import android.net.Uri;
+
 import com.breautek.fuse.FuseAPIPacket;
 import com.breautek.fuse.FuseAPIResponse;
 import com.breautek.fuse.FuseError;
 import com.breautek.fuse.FusePlugin.APIHandler;
 import com.breautek.fuse.filesystem.FuseFileAPIParams;
 import com.breautek.fuse.filesystem.FuseFilesystemPlugin;
+import com.breautek.fuse.filesystem.IFSAPI;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,60 +48,73 @@ public class FileWriteHandler extends APIHandler<FuseFilesystemPlugin> {
         String path = jparams.getString("path");
         long offset = jparams.getLong("offset");
 
-        File file = new File(path);
-
-        if (!file.exists()) {
-            response.send(new FuseError("FuseFilesystem", 0, "No such file found at \"" + path + "\""));
+        Uri uri = Uri.parse(path);
+        IFSAPI fsapi = this.plugin.getFSAPIFactory().get(uri);
+        long bytesWritten = 0;
+        try {
+            bytesWritten = fsapi.write(uri, offset, this.plugin.getChunkSize(), packet.getInputStream(), params.getContentLength());
+        }
+        catch (FuseError error) {
+            response.send(error);
             return;
         }
 
-        long contentLength = params.getContentLength();
+        response.send(Long.toString(bytesWritten));
 
-        RandomAccessFile io = new RandomAccessFile(file, "rw");
-        int bytesWritten = 0;
-        try {
-            if (offset > 0) {
-                io.seek(offset);
-            }
-            if (contentLength > 0) {
-                InputStream readStream = packet.getInputStream();
-                int chunkSize = this.plugin.getChunkSize();
-                if (chunkSize > contentLength) {
-                    chunkSize = (int) contentLength;
-                }
-                byte[] buffer = new byte[chunkSize];
-                long totalBytesRead = 0;
-                int bytesRead = 0;
-                while (true) {
-                    long bytesToRead = contentLength - totalBytesRead;
-                    if (bytesToRead >= chunkSize) {
-                        bytesRead = readStream.read(buffer);
-                    } else {
-                        buffer = new byte[bytesRead];
-                        bytesRead = readStream.read(buffer);
-                    }
-
-                    if (bytesRead == -1) {
-                        break;
-                    }
-
-                    totalBytesRead += bytesRead;
-                    io.write(buffer);
-                    bytesWritten += buffer.length;
-
-                    if (totalBytesRead == contentLength) {
-                        break;
-                    }
-                }
-            }
-
-            io.close();
-        }
-        catch (Exception e) {
-            io.close();
-            throw e;
-        }
-
-        response.send(Integer.toString(bytesWritten));
+//        File file = new File(path);
+//
+//        if (!file.exists()) {
+//            response.send(new FuseError("FuseFilesystem", 0, "No such file found at \"" + path + "\""));
+//            return;
+//        }
+//
+//        long contentLength = params.getContentLength();
+//
+//        RandomAccessFile io = new RandomAccessFile(file, "rw");
+//        int bytesWritten = 0;
+//        try {
+//            if (offset > 0) {
+//                io.seek(offset);
+//            }
+//            if (contentLength > 0) {
+//                InputStream readStream = packet.getInputStream();
+//                int chunkSize = this.plugin.getChunkSize();
+//                if (chunkSize > contentLength) {
+//                    chunkSize = (int) contentLength;
+//                }
+//                byte[] buffer = new byte[chunkSize];
+//                long totalBytesRead = 0;
+//                int bytesRead = 0;
+//                while (true) {
+//                    long bytesToRead = contentLength - totalBytesRead;
+//                    if (bytesToRead >= chunkSize) {
+//                        bytesRead = readStream.read(buffer);
+//                    } else {
+//                        buffer = new byte[bytesRead];
+//                        bytesRead = readStream.read(buffer);
+//                    }
+//
+//                    if (bytesRead == -1) {
+//                        break;
+//                    }
+//
+//                    totalBytesRead += bytesRead;
+//                    io.write(buffer);
+//                    bytesWritten += buffer.length;
+//
+//                    if (totalBytesRead == contentLength) {
+//                        break;
+//                    }
+//                }
+//            }
+//
+//            io.close();
+//        }
+//        catch (Exception e) {
+//            io.close();
+//            throw e;
+//        }
+//
+//        response.send(Integer.toString(bytesWritten));
     }
 }

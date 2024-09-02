@@ -26,4 +26,6 @@ public interface IFSAPI {
     }
 
     long read(Uri uri, long length, long offset, int chunkSize, IReadCallback callback) throws FuseError;
+    long write(Uri uri, long offset, int chunkSize, InputStream io, long contentLength) throws FuseError;
+    long truncate(Uri uri, long contentLength, InputStream io, int chunkSize) throws FuseError;
 }
