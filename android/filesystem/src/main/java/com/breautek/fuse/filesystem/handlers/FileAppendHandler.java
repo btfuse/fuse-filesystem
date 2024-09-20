@@ -26,14 +26,7 @@ import com.breautek.fuse.FusePlugin.APIHandler;
 import com.breautek.fuse.filesystem.FuseFileAPIParams;
 import com.breautek.fuse.filesystem.FuseFilesystemPlugin;
 import com.breautek.fuse.filesystem.IFSAPI;
-
-import org.json.JSONException;
-
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
 
 public class FileAppendHandler extends APIHandler<FuseFilesystemPlugin> {
     public FileAppendHandler(FuseFilesystemPlugin plugin) {

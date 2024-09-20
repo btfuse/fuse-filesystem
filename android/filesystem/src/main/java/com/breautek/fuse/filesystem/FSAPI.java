@@ -164,6 +164,8 @@ public class FSAPI implements IFSAPI {
         }
 
         if (contentLength == 0) {
+            callback.onReadStart(0);
+            callback.onReadClose();
             return 0;
         }
 
