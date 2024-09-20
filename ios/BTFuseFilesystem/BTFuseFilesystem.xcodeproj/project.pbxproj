@@ -8,8 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		00855A03CFF7762FE3892314 /* Pods_BTFuseFilesystem.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D0B7B3C190DCCE629619A70 /* Pods_BTFuseFilesystem.framework */; };
+		940F006F2C977E9E00A66F5D /* BTFuseFilesystemFSAPIProto.h in Headers */ = {isa = PBXBuildFile; fileRef = 940F006E2C977E9E00A66F5D /* BTFuseFilesystemFSAPIProto.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		940F00712C97819700A66F5D /* BTFuseFilesystemFileAPI.h in Headers */ = {isa = PBXBuildFile; fileRef = 940F00702C97819700A66F5D /* BTFuseFilesystemFileAPI.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		940F00732C9781E200A66F5D /* BTFuseFilesystemFileAPIFactory.h in Headers */ = {isa = PBXBuildFile; fileRef = 940F00722C9781E200A66F5D /* BTFuseFilesystemFileAPIFactory.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		940F00752C97828400A66F5D /* BTFuseFilesystemFileAPIFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = 940F00742C97828400A66F5D /* BTFuseFilesystemFileAPIFactory.m */; };
+		940F00772C98F76700A66F5D /* BTFuseFilesystemFileAPI.m in Sources */ = {isa = PBXBuildFile; fileRef = 940F00762C98F76700A66F5D /* BTFuseFilesystemFileAPI.m */; };
 		94DF4C252B39DB2C00322BEC /* BTFuseFilesystem.docc in Sources */ = {isa = PBXBuildFile; fileRef = 94DF4C242B39DB2C00322BEC /* BTFuseFilesystem.docc */; };
-		94DF4C302B39DB2C00322BEC /* BTFuseFilesystemTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 94DF4C2F2B39DB2C00322BEC /* BTFuseFilesystemTests.m */; };
+		94DF4C302B39DB2C00322BEC /* BTFuseFilesystemFileTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 94DF4C2F2B39DB2C00322BEC /* BTFuseFilesystemFileTests.m */; };
 		94DF4C312B39DB2C00322BEC /* BTFuseFilesystem.h in Headers */ = {isa = PBXBuildFile; fileRef = 94DF4C232B39DB2C00322BEC /* BTFuseFilesystem.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		94DF4C422B39E4B500322BEC /* BTFuseFilesystem.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94DF4C202B39DB2C00322BEC /* BTFuseFilesystem.framework */; };
 		94DF4C432B39E4B500322BEC /* BTFuseFilesystem.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 94DF4C202B39DB2C00322BEC /* BTFuseFilesystem.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -22,6 +27,8 @@
 		94DF4C552B3F4A0500322BEC /* BTFuseFilesystemFileAPIParams.m in Sources */ = {isa = PBXBuildFile; fileRef = 94DF4C542B3F4A0500322BEC /* BTFuseFilesystemFileAPIParams.m */; };
 		94DF4C572B41F0A800322BEC /* BTFuseFilesystemUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 94DF4C562B41F0A800322BEC /* BTFuseFilesystemUtils.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		94DF4C592B41F0DA00322BEC /* BTFuseFilesystemUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 94DF4C582B41F0DA00322BEC /* BTFuseFilesystemUtils.m */; };
+		94F13A0D2C9B831B00CCCC89 /* BTFuseFilesystemVars.h in Headers */ = {isa = PBXBuildFile; fileRef = 94F13A0C2C9B831B00CCCC89 /* BTFuseFilesystemVars.h */; };
+		94F13A132C9B867200CCCC89 /* BTFuseFilesystemVars.m in Sources */ = {isa = PBXBuildFile; fileRef = 94F13A122C9B867200CCCC89 /* BTFuseFilesystemVars.m */; };
 		94FA407B2C07E543000AF380 /* BTFuse.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94FA407A2C07E543000AF380 /* BTFuse.xcframework */; };
 		B3A214FCB512298D9D33FC1C /* Pods_BTFuseFilesystemTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 632C4589F2507B00AB78F641 /* Pods_BTFuseFilesystemTests.framework */; };
 /* End PBXBuildFile section */
@@ -55,11 +62,16 @@
 		632C4589F2507B00AB78F641 /* Pods_BTFuseFilesystemTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BTFuseFilesystemTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		67CEBC98BA54F90F8BC21F95 /* Pods-BTFuseFilesystemTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BTFuseFilesystemTests.release.xcconfig"; path = "Target Support Files/Pods-BTFuseFilesystemTests/Pods-BTFuseFilesystemTests.release.xcconfig"; sourceTree = "<group>"; };
 		91169E07A0C481E68793959F /* Pods-BTFuseFilesystem.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BTFuseFilesystem.release.xcconfig"; path = "Target Support Files/Pods-BTFuseFilesystem/Pods-BTFuseFilesystem.release.xcconfig"; sourceTree = "<group>"; };
+		940F006E2C977E9E00A66F5D /* BTFuseFilesystemFSAPIProto.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTFuseFilesystemFSAPIProto.h; sourceTree = "<group>"; };
+		940F00702C97819700A66F5D /* BTFuseFilesystemFileAPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTFuseFilesystemFileAPI.h; sourceTree = "<group>"; };
+		940F00722C9781E200A66F5D /* BTFuseFilesystemFileAPIFactory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTFuseFilesystemFileAPIFactory.h; sourceTree = "<group>"; };
+		940F00742C97828400A66F5D /* BTFuseFilesystemFileAPIFactory.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTFuseFilesystemFileAPIFactory.m; sourceTree = "<group>"; };
+		940F00762C98F76700A66F5D /* BTFuseFilesystemFileAPI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTFuseFilesystemFileAPI.m; sourceTree = "<group>"; };
 		94DF4C202B39DB2C00322BEC /* BTFuseFilesystem.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BTFuseFilesystem.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		94DF4C232B39DB2C00322BEC /* BTFuseFilesystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTFuseFilesystem.h; sourceTree = "<group>"; };
 		94DF4C242B39DB2C00322BEC /* BTFuseFilesystem.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = BTFuseFilesystem.docc; sourceTree = "<group>"; };
 		94DF4C2A2B39DB2C00322BEC /* BTFuseFilesystemTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BTFuseFilesystemTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		94DF4C2F2B39DB2C00322BEC /* BTFuseFilesystemTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTFuseFilesystemTests.m; sourceTree = "<group>"; };
+		94DF4C2F2B39DB2C00322BEC /* BTFuseFilesystemFileTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTFuseFilesystemFileTests.m; sourceTree = "<group>"; };
 		94DF4C462B39E50F00322BEC /* BTFuseFilesystemPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTFuseFilesystemPlugin.h; sourceTree = "<group>"; };
 		94DF4C482B39E58400322BEC /* BTFuseFilesystemPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTFuseFilesystemPlugin.m; sourceTree = "<group>"; };
 		94DF4C4B2B39E8E100322BEC /* BTFuseFilesystemFileTypeHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTFuseFilesystemFileTypeHandler.h; sourceTree = "<group>"; };
@@ -69,6 +81,8 @@
 		94DF4C542B3F4A0500322BEC /* BTFuseFilesystemFileAPIParams.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTFuseFilesystemFileAPIParams.m; sourceTree = "<group>"; };
 		94DF4C562B41F0A800322BEC /* BTFuseFilesystemUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTFuseFilesystemUtils.h; sourceTree = "<group>"; };
 		94DF4C582B41F0DA00322BEC /* BTFuseFilesystemUtils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTFuseFilesystemUtils.m; sourceTree = "<group>"; };
+		94F13A0C2C9B831B00CCCC89 /* BTFuseFilesystemVars.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTFuseFilesystemVars.h; sourceTree = "<group>"; };
+		94F13A122C9B867200CCCC89 /* BTFuseFilesystemVars.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTFuseFilesystemVars.m; sourceTree = "<group>"; };
 		94FA40782C07E452000AF380 /* BTFuseFilesystem.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = BTFuseFilesystem.debug.xcconfig; sourceTree = "<group>"; };
 		94FA40792C07E475000AF380 /* BTFuseFilesystem.release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = BTFuseFilesystem.release.xcconfig; sourceTree = "<group>"; };
 		94FA407A2C07E543000AF380 /* BTFuse.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = BTFuse.xcframework; path = ../Pods/BTFuse/BTFuse.xcframework; sourceTree = "<group>"; };
@@ -147,7 +161,7 @@
 		94DF4C2E2B39DB2C00322BEC /* BTFuseFilesystemTests */ = {
 			isa = PBXGroup;
 			children = (
-				94DF4C2F2B39DB2C00322BEC /* BTFuseFilesystemTests.m */,
+				94DF4C2F2B39DB2C00322BEC /* BTFuseFilesystemFileTests.m */,
 			);
 			path = BTFuseFilesystemTests;
 			sourceTree = "<group>";
@@ -170,6 +184,9 @@
 				94DF4C482B39E58400322BEC /* BTFuseFilesystemPlugin.m */,
 				94DF4C542B3F4A0500322BEC /* BTFuseFilesystemFileAPIParams.m */,
 				94DF4C582B41F0DA00322BEC /* BTFuseFilesystemUtils.m */,
+				940F00742C97828400A66F5D /* BTFuseFilesystemFileAPIFactory.m */,
+				940F00762C98F76700A66F5D /* BTFuseFilesystemFileAPI.m */,
+				94F13A122C9B867200CCCC89 /* BTFuseFilesystemVars.m */,
 			);
 			name = src;
 			sourceTree = "<group>";
@@ -182,6 +199,10 @@
 				94DF4C502B39EA0900322BEC /* BTFuseFilesystemFileType.h */,
 				94DF4C522B3F440D00322BEC /* BTFuseFilesystemFileAPIParams.h */,
 				94DF4C562B41F0A800322BEC /* BTFuseFilesystemUtils.h */,
+				940F006E2C977E9E00A66F5D /* BTFuseFilesystemFSAPIProto.h */,
+				940F00702C97819700A66F5D /* BTFuseFilesystemFileAPI.h */,
+				940F00722C9781E200A66F5D /* BTFuseFilesystemFileAPIFactory.h */,
+				94F13A0C2C9B831B00CCCC89 /* BTFuseFilesystemVars.h */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -209,12 +230,16 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				94F13A0D2C9B831B00CCCC89 /* BTFuseFilesystemVars.h in Headers */,
+				940F00732C9781E200A66F5D /* BTFuseFilesystemFileAPIFactory.h in Headers */,
 				94DF4C572B41F0A800322BEC /* BTFuseFilesystemUtils.h in Headers */,
 				94DF4C512B39EA0900322BEC /* BTFuseFilesystemFileType.h in Headers */,
 				94DF4C4C2B39E8E100322BEC /* BTFuseFilesystemFileTypeHandler.h in Headers */,
+				940F006F2C977E9E00A66F5D /* BTFuseFilesystemFSAPIProto.h in Headers */,
 				94DF4C312B39DB2C00322BEC /* BTFuseFilesystem.h in Headers */,
 				94DF4C472B39E50F00322BEC /* BTFuseFilesystemPlugin.h in Headers */,
 				94DF4C532B3F440D00322BEC /* BTFuseFilesystemFileAPIParams.h in Headers */,
+				940F00712C97819700A66F5D /* BTFuseFilesystemFileAPI.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -386,7 +411,10 @@
 				94DF4C492B39E58400322BEC /* BTFuseFilesystemPlugin.m in Sources */,
 				94DF4C252B39DB2C00322BEC /* BTFuseFilesystem.docc in Sources */,
 				94DF4C592B41F0DA00322BEC /* BTFuseFilesystemUtils.m in Sources */,
+				94F13A132C9B867200CCCC89 /* BTFuseFilesystemVars.m in Sources */,
 				94DF4C552B3F4A0500322BEC /* BTFuseFilesystemFileAPIParams.m in Sources */,
+				940F00772C98F76700A66F5D /* BTFuseFilesystemFileAPI.m in Sources */,
+				940F00752C97828400A66F5D /* BTFuseFilesystemFileAPIFactory.m in Sources */,
 				94DF4C4F2B39E95700322BEC /* BTFuseFilesystemFileTypeHandler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -395,7 +423,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				94DF4C302B39DB2C00322BEC /* BTFuseFilesystemTests.m in Sources */,
+				94DF4C302B39DB2C00322BEC /* BTFuseFilesystemFileTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

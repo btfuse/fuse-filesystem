@@ -1,6 +1,6 @@
 
 /*
-Copyright Breautek
+Copyright Breautek 2024-2024
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,13 +20,51 @@ limitations under the License.
 #import <BTFuseFilesystem/BTFuseFilesystemPlugin.h>
 #import "BTFuseFilesystemFileTypeHandler.h"
 #import <BTFuseFilesystem/BTFuseFilesystemFileType.h>
+#import <BTFuseFilesystem/BTFuseFilesystemFileAPIFactory.h>
 #import "BTFuseFilesystemFileAPIParams.h"
+#import "BTFuseFilesystem/BTFuseFilesystemVars.h"
 
-NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
+@implementation BTFuseFilesystemReadCallbackContext {
+    BTFuseAPIResponse* $response;
+}
+
+- (instancetype) init:(BTFuseAPIResponse*) response {
+    self = [super init];
+    
+    $response = response;
+    
+    return self;
+}
+
+- (void) onReadStart:(long) contentLength {
+    [$response setStatus: contentLength > 0 ? 200 : 204];
+    [$response setContentType:@"application/octet-stream"];
+    [$response setContentLength: contentLength];
+    [$response didFinishHeaders];
+}
+
+- (void) onReadChunk:(NSData*) chunk {
+    [$response pushData: chunk];
+}
+
+- (void) onReadClose {
+    [$response didFinish];
+}
+
+- (void) onReadFailure:(BTFuseError*) error {
+    [$response kill: [error getMessage]];
+}
+
+- (void) dealloc {
+    $response = nil;
+}
+
+@end
 
 @implementation BTFuseFilesystemPlugin {
     uint32_t DEFAULT_CHUNK_SIZE;
     uint32_t $chunkSize;
+    BTFuseFilesystemFileAPIFactory* $apiFactory;
 }
 
 - (instancetype) init:(BTFuseContext*) context {
@@ -34,6 +72,8 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
     
     DEFAULT_CHUNK_SIZE = 4194304; // 4mb
     $chunkSize = DEFAULT_CHUNK_SIZE;
+    
+    $apiFactory = [[BTFuseFilesystemFileAPIFactory alloc] init];
     
     return self;
 }
@@ -48,6 +88,14 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
 
 - (uint32_t) getChunkSize {
     return $chunkSize;
+}
+
+- (void) setAPIFactory:(BTFuseFilesystemFileAPIFactory*) factory {
+    $apiFactory = factory;
+}
+
+- (BTFuseFilesystemFileAPIFactory*) getAPIFactory {
+    return $apiFactory;
 }
 
 - (void) initHandles {
@@ -89,41 +137,59 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
 }
 
 - (void) handleFileTypeRequest:(BTFuseAPIPacket*) packet response:(BTFuseAPIResponse*) response {
-    NSString* path = [packet readAsString];
-    NSFileManager* fm = [NSFileManager defaultManager];
+    NSURL* url = [[NSURL alloc] initWithString: [packet readAsString]];
+    BTFuseFilesystemFileAPIFactory* factory = [self getAPIFactory];
+    id<BTFuseFilesystemFSAPIProto> fsapi = [factory get: url];
     
-    BOOL isDirectory;
-    BOOL exists = [fm fileExistsAtPath: path isDirectory: &isDirectory];
+    BTFuseError* error = nil;
+    BTFuseFilesystemFileType type = [fsapi getType: url error: &error];
     
-    if (!exists) {
-        NSString* message = [NSString stringWithFormat:@"No such file found at %@", path];
-        [response sendError:[[BTFuseError alloc] init:@"FuseFilesystem" withCode:0 withMessage:message]];
+    if (error != nil) {
+        [response sendError: error];
         return;
     }
     
-    BTFuseFilesystemFileType type = BTFuseFilesystemFileTypeFile;
+//    NSFileManager* fm = [NSFileManager defaultManager];
+//    
+//    BOOL isDirectory;
+//    BOOL exists = [fm fileExistsAtPath: path isDirectory: &isDirectory];
+//    
+//    if (!exists) {
+//        NSString* message = [NSString stringWithFormat:@"No such file found at %@", path];
+//        [response sendError:[[BTFuseError alloc] init:@"FuseFilesystem" withCode:0 withMessage:message]];
+//        return;
+//    }
+//    
+//    BTFuseFilesystemFileType type = BTFuseFilesystemFileTypeFile;
+//    
+//    if (isDirectory) {
+//        type = BTFuseFilesystemFileTypeDirectory;
+//    }
+//    
+//    NSInteger typeInt = (NSInteger) type;
     
-    if (isDirectory) {
-        type = BTFuseFilesystemFileTypeDirectory;
-    }
-    
-    NSInteger typeInt = (NSInteger) type;
-    
-    [response sendString:[NSString stringWithFormat:@"%ld", (long) typeInt]];
+    [response sendString:[NSString stringWithFormat:@"%ld", (long) type]];
 }
 
 - (void) handleFileSizeRequest:(BTFuseAPIPacket*) packet response:(BTFuseAPIResponse*) response {
-    NSString* path = [packet readAsString];
+    NSURL* url = [[NSURL alloc] initWithString: [packet readAsString]];
+    BTFuseFilesystemFileAPIFactory* factory = [self getAPIFactory];
+    id<BTFuseFilesystemFSAPIProto> fsapi = [factory get: url];
+    
+//    BTFuseError* error = nil;
+//    NSString* path = [packet readAsString];
     
     BTFuseError* error = nil;
-    NSNumber* size = [self $getFileSize: path error:&error];
+//    NSNumber* size = [self $getFileSize: path error:&error];
+
+    long size = [fsapi getSize: url error: &error];
     
     if (error != nil) {
         [response sendError:error];
         return;
     }
 
-    [response sendString:[NSString stringWithFormat:@"%lu", [size unsignedLongValue]]];
+    [response sendString:[NSString stringWithFormat:@"%lu", size]];
 }
 
 - (void) handleFileMkdirRequest:(BTFuseAPIPacket*) packet response:(BTFuseAPIResponse*) response {
@@ -135,22 +201,16 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         return;
     }
     
+    NSURL* url = [[NSURL alloc] initWithString: [params objectForKey:@"path"]];
+    BTFuseFilesystemFileAPIFactory* factory = [self getAPIFactory];
+    id<BTFuseFilesystemFSAPIProto> fsapi = [factory get: url];
+    
     bool recursive = [params objectForKey:@"recursive"];
-    NSString* path = [params objectForKey:@"path"];
-    NSFileManager* fm = [NSFileManager defaultManager];
-    
-    BOOL isDirectory;
-    BOOL exists = [fm fileExistsAtPath: path isDirectory: &isDirectory];
-    
-    if (exists) {
-        [response sendString:@"false"];
-        return;
-    }
-    
-    error = nil;
-    bool didCreate = [fm createDirectoryAtPath: path withIntermediateDirectories: recursive attributes:nil error:&error];
+
+    BTFuseError* fuseError = nil;
+    bool didCreate = [fsapi mkdir: url recursive: recursive error: &fuseError];
     if (error != nil) {
-        [response sendError:[[BTFuseError alloc] init:@"FuseFilesystem" withCode:0 withError:error]];
+        [response sendError: fuseError];
         return;
     }
 
@@ -167,83 +227,30 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         return;
     }
     
-    NSString* path = [params objectForKey:@"path"];
+    NSURL* url = [[NSURL alloc] initWithString: [params objectForKey:@"path"]];
     NSNumber* ndesiredLength = [params objectForKey:@"length"];
     NSNumber* noffset = [params objectForKey:@"offset"];
     
-    NSFileHandle* fileHandle = [NSFileHandle fileHandleForReadingAtPath: path];
+    BTFuseFilesystemFileAPIFactory* factory = [self getAPIFactory];
+    id<BTFuseFilesystemFSAPIProto> fsapi = [factory get: url];
     
-    if (!fileHandle) {
-        [response sendError:[[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode:0 withMessage: [NSString stringWithFormat: @"Failed to open path \"%@\"", path]]];
+    BTFuseFilesystemReadCallbackContext* callbackContext = [[BTFuseFilesystemReadCallbackContext alloc] init: response];
+    
+    BTFuseError* fuseError = nil;
+    [
+        fsapi
+        read: url
+        length: [ndesiredLength longValue]
+        offset: [noffset longValue]
+        chunkSize: [self getChunkSize]
+        callback:callbackContext
+        error:&fuseError
+    ];
+    
+    if (fuseError != nil) {
+        [response sendError: fuseError];
         return;
     }
-    
-    BTFuseError* fe = nil;
-    
-    NSNumber* nfileSize = [self $getFileSize: path error:&fe];
-    if (fe != nil) {
-        [response sendError: fe];
-        return;
-    }
-    
-    uint64_t fileSize = [nfileSize unsignedLongValue];
-    uint64_t contentLength = 0;
-    int64_t desiredLength = [ndesiredLength longValue];
-    uint64_t offset = [noffset unsignedLongValue];
-    
-    if (desiredLength == -1) {
-        contentLength = fileSize;
-    }
-    else {
-        contentLength = (desiredLength < fileSize) ? desiredLength : fileSize;
-    }
-    
-    if (contentLength + offset > fileSize) {
-        contentLength -= (contentLength + offset) - fileSize;
-    }
-    
-    if (contentLength == 0) {
-        [response sendNoContent];
-        return;
-    }
-    
-    uint32_t chunkSize = [self getChunkSize];
-    if (chunkSize > contentLength) {
-        chunkSize = (uint32_t) contentLength;
-    }
-    
-    uint64_t totalBytesRead = 0;
-    
-    if (offset > 0) {
-        [fileHandle seekToOffset: offset error: &error];
-        if (error != nil) {
-            [response sendError:[[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode:0 withError:error]];
-            return;
-        }
-    }
-    
-    [response finishHeaders: 200 withContentType:@"application/octet-stream" withContentLength: contentLength];
-    
-    bool didFail = false;
-    while (totalBytesRead < contentLength) {
-        NSData* data = [fileHandle readDataOfLength: chunkSize];
-        if (data == nil) {
-            didFail = true;
-            break;
-        }
-        
-        totalBytesRead += [data length];
-        [response pushData: data];
-    }
-    
-    [fileHandle closeFile];
-    
-    if (didFail) {
-        [response kill: @"Failed to read data"];
-        return;
-    }
-    
-    [response didFinish];
 }
 
 - (void) handleFileTruncateRequest:(BTFuseAPIPacket*) packet response:(BTFuseAPIResponse*) response {
@@ -260,85 +267,27 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
     }
     
     NSString* path = [[NSString alloc] initWithData: [params getParams] encoding: NSUTF8StringEncoding];
-    NSFileHandle* fileHandle = [NSFileHandle fileHandleForWritingAtPath: path];
-    
-    if (!fileHandle) {
-        [response sendError:[[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode:0 withMessage: [NSString stringWithFormat: @"Failed to open path \"%@\"", path]]];
-        return;
-    }
-    
-    NSError* fileError = nil;
-    
-    [fileHandle truncateAtOffset: 0 error: &fileError];
-    if (fileError != nil) {
-        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
-        return;
-    }
+    NSURL* url = [[NSURL alloc] initWithString: path];
+    BTFuseFilesystemFileAPIFactory* factory = [self getAPIFactory];
+    id<BTFuseFilesystemFSAPIProto> fsapi = [factory get: url];
     
     NSUInteger contentLength = [[params getContentLength] unsignedLongValue];
     
-    if (contentLength == 0) {
-        [fileHandle closeFile];
-        [response sendString: @"0"];
+    long bytesWritten = [
+        fsapi
+        truncate: url
+        contentLength: contentLength
+        input: reader
+        chunkSize: [self getChunkSize]
+        error: &error
+    ];
+    
+    if (error != nil) {
+        [response sendError: error];
         return;
     }
     
-    uint32_t chunkSize = [self getChunkSize];
-    
-    if (chunkSize > contentLength) {
-        chunkSize = (uint32_t) contentLength;
-    }
-    
-    uint8_t buffer[chunkSize];
-    uint64_t totalBytesRead = 0;
-    uint64_t bytesWritten = 0;
-    NSInteger bytesRead = 0;
-    bool didError = false;
-    
-    while (true) {
-        uint64_t totalBytesToRead = contentLength - totalBytesRead;
-        
-        if (totalBytesToRead == 0) {
-            break;
-        }
-        
-        uint32_t bytesToRead = 0;
-        if (totalBytesToRead > UINT32_MAX) {
-            bytesToRead = UINT32_MAX;
-        }
-        else {
-            bytesToRead = (uint32_t) totalBytesToRead;
-        }
-        
-        if (bytesToRead > chunkSize) {
-            bytesToRead = chunkSize;
-        }
-        
-        bytesRead = [reader read: buffer maxBytes: bytesToRead];
-        
-        if (bytesRead == -1) {
-            break;
-        }
-        
-        NSData* data = [[NSData alloc] initWithBytes: buffer length: bytesRead];
-        totalBytesRead += bytesRead;
-        [fileHandle writeData: data error: &fileError];
-        bytesWritten += [data length];
-        
-        if (fileError != nil) {
-            didError = true;
-            break;
-        }
-    }
-    
-    [fileHandle closeFile];
-    
-    if (didError) {
-        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
-        return;
-    }
-    
-    [response sendString: [NSString stringWithFormat: @"%"PRIu64, bytesWritten]];
+    [response sendString: [NSString stringWithFormat: @"%ld", bytesWritten]];
 }
 
 - (void) handleFileAppendRequest:(BTFuseAPIPacket*) packet response:(BTFuseAPIResponse*) response {
@@ -354,84 +303,26 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         return;
     }
     
-    NSString* path = [[NSString alloc] initWithData: [params getParams] encoding: NSUTF8StringEncoding];
-    NSFileHandle* fileHandle = [NSFileHandle fileHandleForWritingAtPath: path];
+    NSURL* url = [[NSURL alloc] initWithString: [[NSString alloc] initWithData: [params getParams] encoding: NSUTF8StringEncoding]];
     
-    if (!fileHandle) {
-        [response sendError:[[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode:0 withMessage: [NSString stringWithFormat: @"Failed to open path \"%@\"", path]]];
+    BTFuseFilesystemFileAPIFactory* factory = [self getAPIFactory];
+    id<BTFuseFilesystemFSAPIProto> fsapi = [factory get: url];
+    
+    long bytesWritten = [
+        fsapi
+        append: url
+        input: reader
+        contentLength: [[params getContentLength] unsignedLongValue]
+        chunkSize: [self getChunkSize]
+        error: &error
+    ];
+    
+    if (error != nil) {
+        [response sendError: error];
         return;
     }
     
-    NSError* fileError = nil;
-    
-    [fileHandle seekToEndReturningOffset:nil error:&fileError];
-    if (fileError != nil) {
-        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
-        return;
-    }
-    
-    NSUInteger contentLength = [[params getContentLength] unsignedLongValue];
-    if (contentLength == 0) {
-        [fileHandle closeFile];
-        [response sendString: @"0"];
-        return;
-    }
-    
-    uint32_t chunkSize = [self getChunkSize];
-    if (chunkSize > contentLength) {
-        chunkSize = (uint32_t) contentLength;
-    }
-    
-    uint8_t buffer[chunkSize];
-    uint64_t totalBytesRead = 0;
-    uint64_t bytesWritten = 0;
-    NSInteger bytesRead = 0;
-    bool didError = false;
-    
-    while(true) {
-        uint64_t totalBytesToRead = contentLength - totalBytesRead;
-        
-        if (totalBytesToRead == 0) {
-            break;
-        }
-        
-        uint32_t bytesToRead = 0;
-        if (totalBytesToRead > UINT32_MAX) {
-            bytesToRead = UINT32_MAX;
-        }
-        else {
-            bytesToRead = (uint32_t) totalBytesToRead;
-        }
-        
-        if (bytesToRead > chunkSize) {
-            bytesToRead = chunkSize;
-        }
-        
-        bytesRead = [reader read: buffer maxBytes: bytesToRead];
-        
-        if (bytesRead == -1) {
-            break;
-        }
-        
-        NSData* data = [[NSData alloc] initWithBytes: buffer length: bytesRead];
-        totalBytesRead += bytesRead;
-        [fileHandle writeData: data error: &fileError];
-        bytesWritten += [data length];
-        
-        if (error != nil) {
-            didError = true;
-            break;
-        }
-    }
-    
-    [fileHandle closeFile];
-    
-    if (didError) {
-        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
-        return;
-    }
-    
-    [response sendString: [NSString stringWithFormat: @"%"PRIu64, bytesWritten]];
+    [response sendString: [NSString stringWithFormat: @"%ld", bytesWritten]];
 }
 
 - (void) handleFileWriteRequest:(BTFuseAPIPacket*) packet response:(BTFuseAPIResponse*) response {
@@ -472,78 +363,17 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         offset = [nsoffset unsignedLongValue];
     }
     
-    NSFileHandle* fileHandle = [NSFileHandle fileHandleForWritingAtPath: path];
+    NSURL* url = [[NSURL alloc] initWithString: path];
+    BTFuseFilesystemFileAPIFactory* factory = [self getAPIFactory];
+    id<BTFuseFilesystemFSAPIProto> fsapi = [factory get: url];
     
-    if (!fileHandle) {
-        [response sendError:[[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode:0 withMessage: [NSString stringWithFormat: @"Failed to open path \"%@\"", path]]];
+    long bytesWritten = [fsapi write: url offset: offset chunkSize: [self getChunkSize] input: reader contentLength: contentLength error: &error];
+    if (error != nil) {
+        [response sendError: error];
         return;
     }
     
-    NSError* fileError = nil;
-    if (offset != 0) {
-        [fileHandle seekToOffset: offset error: &fileError];
-        if (fileError != nil) {
-            [response sendError:[[BTFuseError alloc] init: BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
-            return;
-        }
-    }
-    
-    uint32_t chunkSize = [self getChunkSize];
-    
-    if (chunkSize > contentLength) {
-        chunkSize = (uint32_t) contentLength;
-    }
-    
-    uint8_t buffer[chunkSize];
-    uint64_t totalBytesRead = 0;
-    uint64_t bytesWritten = 0;
-    NSInteger bytesRead = 0;
-    bool didError = false;
-    
-    while(true) {
-        uint64_t totalBytesToRead = contentLength - totalBytesRead;
-        
-        if (totalBytesToRead == 0) {
-            break;
-        }
-        
-        uint32_t bytesToRead = 0;
-        if (totalBytesToRead > UINT32_MAX) {
-            bytesToRead = UINT32_MAX;
-        }
-        else {
-            bytesToRead = (uint32_t) totalBytesToRead;
-        }
-        
-        if (bytesToRead > chunkSize) {
-            bytesToRead = chunkSize;
-        }
-        
-        bytesRead = [reader read: buffer maxBytes: bytesToRead];
-        
-        if (bytesRead == -1) {
-            break;
-        }
-        
-        NSData* data = [[NSData alloc] initWithBytes: buffer length: bytesRead];
-        totalBytesRead += bytesRead;
-        [fileHandle writeData: data error: &fileError];
-        bytesWritten += [data length];
-        
-        if (fileError != nil) {
-            didError = true;
-            break;
-        }
-    }
-    
-    [fileHandle closeFile];
-    
-    if (didError) {
-        [response sendError: [[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withError: fileError]];
-        return;
-    }
-    
-    [response sendString: [NSString stringWithFormat: @"%"PRIu64, bytesWritten]];
+    [response sendString: [NSString stringWithFormat: @"%ld", bytesWritten]];
 }
 
 - (void) handleFileRemoveRequest:(BTFuseAPIPacket*) packet response:(BTFuseAPIResponse*) response {
@@ -556,40 +386,31 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
         return;
     }
     
-    NSString* path = [opts objectForKey: @"path"];
-    if (path == nil) {
-        [response sendError:[[BTFuseError alloc] init:BTFUSE_FILESYSTEM_TAG withCode: 0 withMessage: @"Path is required"]];
+    NSURL* url = [[NSURL alloc] initWithString: [opts objectForKey: @"path"]];
+    BTFuseFilesystemFileAPIFactory* factory = [self getAPIFactory];
+    id<BTFuseFilesystemFSAPIProto> fsapi = [factory get: url];
+
+    BTFuseError* fuseError = nil;
+    bool didDelete = [fsapi delete: url recursive: [opts objectForKey: @"recursive"] error: &fuseError];
+    if (fuseError != nil) {
+        [response sendError: fuseError];
         return;
     }
     
-    // We don't use the recursive options, unlike Android, the iOS API will always reecursively delete
-    // if the path leads to a directory
-    
-    NSFileManager* fm = [NSFileManager defaultManager];
-    if (![fm fileExistsAtPath: path]) {
-        [response sendString:@"false"];
-        return;
-    }
-    
-    [fm removeItemAtPath: path error: &error];
-    
-    if (error != nil) {
-        [response sendError:[[BTFuseError alloc] init: BTFUSE_FILESYSTEM_TAG withCode: 0 withError: error]];
-        return;
-    }
-    
-    // Unlike the Android APIs, we don't know if things were actually deleted, however,
-    // it's likely safe to assume if we made it here without error, then the object at path
-    // was in fact, removed.
-    [response sendString:@"true"];
+    [response sendString: didDelete ? @"true" : @"false"];
 }
 
 - (void) handleFileExistsRequest:(BTFuseAPIPacket*) packet response:(BTFuseAPIResponse*) response {
-    NSString* path = [packet readAsString];
-    NSFileManager* fm = [NSFileManager defaultManager];
+    NSURL* url = [[NSURL alloc] initWithString: [packet readAsString]];
+    BTFuseFilesystemFileAPIFactory* factory = [self getAPIFactory];
+    id<BTFuseFilesystemFSAPIProto> fsapi = [factory get: url];
     
-    BOOL isDirectory;
-    BOOL exists = [fm fileExistsAtPath: path isDirectory: &isDirectory];
+    BTFuseError* error = nil;
+    bool exists = [fsapi exists: url error: &error];
+    if (error != nil) {
+        [response sendError: error];
+        return;
+    }
     
     if (exists) {
         [response sendString: @"true"];
@@ -597,41 +418,6 @@ NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
     else {
         [response sendString: @"false"];
     }
-}
-
-- (NSNumber*) $getFileSize:(NSString*) path error:(BTFuseError**) error {
-    NSFileManager* fm = [NSFileManager defaultManager];
-    
-    BOOL isDirectory;
-    BOOL exists = [fm fileExistsAtPath: path isDirectory: &isDirectory];
-    
-    if (!exists) {
-        NSString* message = [NSString stringWithFormat:@"No such file found at \"%@\"", path];
-        *error = [[BTFuseError alloc] init:@"FuseFilesystem" withCode:0 withMessage:message];
-        return nil;
-    }
-    
-    if (isDirectory) {
-        NSString* message = [NSString stringWithFormat:@"Path \"%@\" is a directory", path];
-        *error = [[BTFuseError alloc] init:@"FuseFilesystem" withCode:0 withMessage:message];
-        return nil;
-    }
-    
-    NSError* e;
-    NSDictionary* attributes = [fm attributesOfItemAtPath: path error: &e];
-    
-    if (e != nil) {
-        *error = [[BTFuseError alloc] init:@"FuseFilesystem" withCode:0 withError: e];
-        return nil;
-    }
-    
-    if (attributes == nil) {
-        NSString* message = [NSString stringWithFormat:@"Could not read \"%@\"", path];
-        *error = [[BTFuseError alloc] init:@"FuseFilesystem" withCode:0 withMessage:message];
-        return nil;
-    }
-    
-    return [attributes objectForKey:NSFileSize];
 }
 
 @end

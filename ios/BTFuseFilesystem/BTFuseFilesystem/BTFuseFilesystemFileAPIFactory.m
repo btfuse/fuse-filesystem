@@ -15,33 +15,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef BTFuseFilesystemPlugin_h
-#define BTFuseFilesystemPlugin_h
-
-#import <BTFuse/BTFuse.h>
+#import <Foundation/Foundation.h>
 #import <BTFuseFilesystem/BTFuseFilesystemFileAPIFactory.h>
+#import <BTFuseFilesystem/BTFuseFilesystemFileAPI.h>
 #import <BTFuseFilesystem/BTFuseFilesystemFSAPIProto.h>
 
-@interface BTFuseFilesystemReadCallbackContext: NSObject <BTFuseFilesystemFSAPIProtoReadCallback>
+@implementation BTFuseFilesystemFileAPIFactory {
+    id<BTFuseFilesystemFSAPIProto> $fsapi;
+}
 
-- (instancetype) init NS_UNAVAILABLE;
-- (instancetype) init:(BTFuseAPIResponse*) response;
+- (instancetype) init {
+    self = [super init];
+    
+    $fsapi = [[BTFuseFilesystemFileAPI alloc] init];
+    
+    return self;
+}
+
+- (id<BTFuseFilesystemFSAPIProto>) get:(NSURL*) url {
+    NSString* scheme = url.scheme;
+    
+    if (scheme == nil) {
+        return nil;
+    }
+    
+    if ([scheme isEqualToString: @"file"]) {
+        return $fsapi;
+    }
+
+    return nil;
+}
 
 @end
-
-@interface BTFuseFilesystemPlugin : BTFusePlugin
-
-- (instancetype) init NS_UNAVAILABLE;
-- (instancetype) init:(BTFuseContext*) context;
-
-- (NSString*) getID;
-
-- (void) setChunkSize:(uint32_t) chunkSize;
-- (uint32_t) getChunkSize;
-
-- (void) setAPIFactory:(BTFuseFilesystemFileAPIFactory*) factory;
-- (BTFuseFilesystemFileAPIFactory*) getAPIFactory;
-
-@end
-
-#endif

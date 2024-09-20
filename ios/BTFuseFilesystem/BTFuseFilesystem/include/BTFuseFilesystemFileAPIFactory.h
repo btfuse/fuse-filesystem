@@ -15,14 +15,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef BTFuseFilesystemUtils_h
-#define BTFuseFilesystemUtils_h
+#ifndef BTFuseFilesystemFileAPIFactory_h
+#define BTFuseFilesystemFileAPIFactory_h
 
-@interface BTFuseFilesystemUtils: NSObject
+#import <BTFuseFilesystem/BTFuseFilesystemFSAPIProto.h>
+#import <BTFuseFilesystem/BTFuseFIlesystemFileAPI.h>
 
-- (instancetype) init NS_UNAVAILABLE;
+@interface BTFuseFilesystemFileAPIFactory: NSObject
 
-+ (bool) deleteRecursively:(NSString*) path error:(NSError**) error;
+- (id<BTFuseFilesystemFSAPIProto>) get:(NSURL*) url;
 
 @end
 

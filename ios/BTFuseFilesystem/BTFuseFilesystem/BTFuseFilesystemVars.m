@@ -15,15 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef BTFuseFilesystemUtils_h
-#define BTFuseFilesystemUtils_h
+#import <Foundation/Foundation.h>
+#import "BTFuseFilesystem/BTFuseFilesystemVars.h"
 
-@interface BTFuseFilesystemUtils: NSObject
-
-- (instancetype) init NS_UNAVAILABLE;
-
-+ (bool) deleteRecursively:(NSString*) path error:(NSError**) error;
-
-@end
-
-#endif
+NSString* BTFUSE_FILESYSTEM_TAG = @"FuseFilesystem";
+ 

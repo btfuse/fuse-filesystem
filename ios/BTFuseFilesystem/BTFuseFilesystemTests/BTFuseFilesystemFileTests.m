@@ -20,16 +20,16 @@ limitations under the License.
 #import <BTFuseFilesystem/BTFuseFilesystem.h>
 #import <XCTest/XCTest.h>
 
-@interface BTFuseFilesystemTests : XCTestCase <BTFuseTestControllerDelegate> {
+@interface BTFuseFilesystemFileTests : XCTestCase <BTFuseTestControllerDelegate> {
     BTFuseTestViewController* $viewController;
     BTFuseTestAPIClientBuilder* $apiBuilder;
     BTFuseTestSetupCompletionHandler $onSetupComplete;
-    NSString* $testDataPath;
+    NSURL* $testDataURL;
 }
 
 @end
 
-@implementation BTFuseFilesystemTests
+@implementation BTFuseFilesystemFileTests
 
 - (void) onBeforeWebviewLoad {}
 
@@ -55,10 +55,10 @@ limitations under the License.
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString* documentsDirectory = [paths firstObject];
     
-    $testDataPath = [documentsDirectory stringByAppendingPathComponent:@"testData"];
+    $testDataURL = [[NSURL alloc] initFileURLWithPath:[documentsDirectory stringByAppendingPathComponent:@"testData"]];
     
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    [fileManager createDirectoryAtPath: $testDataPath withIntermediateDirectories: false attributes:nil error: nil];
+    [fileManager createDirectoryAtPath: $testDataURL.path withIntermediateDirectories: false attributes:nil error: nil];
     
     [self createFileForTypeTest];
     [self createFileForSizeTest];
@@ -80,7 +80,7 @@ limitations under the License.
     
     NSFileManager* fileManager = [NSFileManager defaultManager];
     NSError* error = nil;
-    [fileManager removeItemAtPath: $testDataPath error: &error];
+    [fileManager removeItemAtPath: $testDataURL.path error: &error];
     
     if (error != nil) {
         NSLog(@"Error at cleaning test data directory: %@", error);
@@ -90,113 +90,114 @@ limitations under the License.
 #pragma mark Setup APIs
 
 - (void) createFileForTypeTest {
-    NSString* filePath = [$testDataPath stringByAppendingPathComponent:@"fileForTypeTest"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForTypeTest"];
 
     NSFileManager* fileManager = [NSFileManager defaultManager];
     
-    [fileManager removeItemAtPath: filePath error: nil];
+    [fileManager removeItemAtPath: url.path error: nil];
     
-    if (![fileManager createFileAtPath:filePath contents:nil attributes:nil]) {
+    if (![fileManager createFileAtPath: url.path contents:nil attributes:nil]) {
         NSLog(@"Failed to create file type test file");
     }
 }
 
 - (void) createFileForSizeTest {
-    NSString* filePath = [$testDataPath stringByAppendingPathComponent:@"fileForSizeTest"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForSizeTest"];
     
     NSMutableData* data = [[NSMutableData alloc] initWithLength: 512];
 
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath: filePath error: nil];
-    if (![fileManager createFileAtPath:filePath contents: data attributes:nil]) {
+    [fileManager removeItemAtPath: url.path error: nil];
+    if (![fileManager createFileAtPath: url.path contents: data attributes:nil]) {
         NSLog(@"Failed to create file type test file");
     }
 }
 
 - (void) createFileForReadTest {
-    NSString* filePath = [$testDataPath stringByAppendingPathComponent:@"fileForReadTest"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForReadTest"];
     
     NSMutableData* data = [[NSMutableData alloc] initWithData: [@"Hello Test File!" dataUsingEncoding:NSUTF8StringEncoding]];
 
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath: filePath error: nil];
-    if (![fileManager createFileAtPath:filePath contents: data attributes:nil]) {
+    [fileManager removeItemAtPath: url.path error: nil];
+    if (![fileManager createFileAtPath: url.path contents: data attributes:nil]) {
         NSLog(@"Failed to create file read test file");
     }
 }
 
 - (void) createFileForExistTest {
-    NSString* filePath = [$testDataPath stringByAppendingPathComponent:@"fileForExistTest"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForExistTest"];
     
     NSMutableData* data = [[NSMutableData alloc] initWithData: [@"Hello Test File!" dataUsingEncoding:NSUTF8StringEncoding]];
 
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath: filePath error: nil];
-    if (![fileManager createFileAtPath:filePath contents: data attributes:nil]) {
+    [fileManager removeItemAtPath: url.path error: nil];
+    if (![fileManager createFileAtPath: url.path contents: data attributes:nil]) {
         NSLog(@"Failed to create file read test file");
     }
 }
 
 - (void) createFileForAppendTest:(NSString*) ident {
-    NSString* filePath = [[$testDataPath stringByAppendingPathComponent:@"fileForAppendTest"] stringByAppendingString: ident];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:[@"fileForAppendTest" stringByAppendingString: ident]];
     
     NSMutableData* data = [[NSMutableData alloc] initWithData: [@"Hello Test File!" dataUsingEncoding:NSUTF8StringEncoding]];
 
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath: filePath error: nil];
-    if (![fileManager createFileAtPath:filePath contents: data attributes:nil]) {
+    [fileManager removeItemAtPath: url.path error: nil];
+    if (![fileManager createFileAtPath: url.path contents: data attributes:nil]) {
         NSLog(@"Failed to create file read test file");
     }
 }
 
 - (void) createFileForTruncateTest:(NSString*) ident {
-    NSString* filePath = [[$testDataPath stringByAppendingPathComponent:@"fileForTruncateTest"] stringByAppendingString: ident];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:[@"fileForTruncateTest" stringByAppendingString: ident]];
     
     NSMutableData* data = [[NSMutableData alloc] initWithData: [@"Hello Test File!" dataUsingEncoding:NSUTF8StringEncoding]];
 
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath: filePath error: nil];
-    if (![fileManager createFileAtPath:filePath contents: data attributes:nil]) {
+    [fileManager removeItemAtPath: url.path error: nil];
+    if (![fileManager createFileAtPath: url.path contents: data attributes:nil]) {
         NSLog(@"Failed to create file read test file");
     }
 }
 
 - (void) createFileForWriteTest:(NSString*) ident {
-    NSString* filePath = [[$testDataPath stringByAppendingPathComponent:@"fileForWriteTest"] stringByAppendingString: ident];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:[@"fileForWriteTest" stringByAppendingString: ident]];
     
     NSMutableData* data = [[NSMutableData alloc] initWithData: [@"Initial State!" dataUsingEncoding:NSUTF8StringEncoding]];
 
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath: filePath error: nil];
-    if (![fileManager createFileAtPath:filePath contents: data attributes:nil]) {
+    [fileManager removeItemAtPath: url.path error: nil];
+    if (![fileManager createFileAtPath: url.path contents: data attributes:nil]) {
         NSLog(@"Failed to create file read test file");
     }
 }
 
 - (void) createFileForRecursiveDeleteTest {
-    NSString* dirPath = [$testDataPath stringByAppendingPathComponent:@"recursiveDelete"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"recursiveDelete"];
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath: dirPath error: nil];
+    [fileManager removeItemAtPath: url.path error: nil];
     
-    [fileManager createDirectoryAtPath: dirPath withIntermediateDirectories: false attributes: nil error: nil];
-    NSString* filePath = [dirPath stringByAppendingPathComponent: @"recursiveFile"];
+    [fileManager createDirectoryAtPath: url.path withIntermediateDirectories: false attributes: nil error: nil];
+    
+    url = [url URLByAppendingPathComponent: @"recursiveFile"];
     
     NSMutableData* data = [[NSMutableData alloc] initWithData: [@"Hello Test File!" dataUsingEncoding:NSUTF8StringEncoding]];
 
-    [fileManager removeItemAtPath: filePath error: nil];
-    if (![fileManager createFileAtPath:filePath contents: data attributes:nil]) {
+    [fileManager removeItemAtPath: url.path error: nil];
+    if (![fileManager createFileAtPath: url.path contents: data attributes:nil]) {
         NSLog(@"Failed to create file read test file");
     }
 }
 
 - (void) createFileForDeleteTest:(NSString*) ident {
-    NSString* filePath = [[$testDataPath stringByAppendingPathComponent:@"fileForDeleteTest"] stringByAppendingString: ident];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:[@"fileForDeleteTest" stringByAppendingString: ident]];
     
     NSMutableData* data = [[NSMutableData alloc] initWithData: [@"Initial State!" dataUsingEncoding:NSUTF8StringEncoding]];
 
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath: filePath error: nil];
-    if (![fileManager createFileAtPath:filePath contents: data attributes:nil]) {
+    [fileManager removeItemAtPath: url.path error: nil];
+    if (![fileManager createFileAtPath: url.path contents: data attributes:nil]) {
         NSLog(@"Failed to create file read test file");
     }
 }
@@ -230,9 +231,9 @@ limitations under the License.
 - (void) testFileNonExist {
     $apiBuilder.endpoint = @"/file/exists";
     
-    NSString* path = [$testDataPath stringByAppendingPathComponent:@"fileForExistTest_doesNotExist"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForExistTest_doesNotExist"];
     
-    $apiBuilder.data = [path dataUsingEncoding: NSUTF8StringEncoding];
+    $apiBuilder.data = [url.absoluteString dataUsingEncoding: NSUTF8StringEncoding];
     
     BTFuseTestAPIClient* client = [$apiBuilder build];
     
@@ -260,9 +261,9 @@ limitations under the License.
 - (void) testFileExist {
     $apiBuilder.endpoint = @"/file/exists";
     
-    NSString* path = [$testDataPath stringByAppendingPathComponent:@"fileForExistTest"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForExistTest"];
     
-    $apiBuilder.data = [path dataUsingEncoding: NSUTF8StringEncoding];
+    $apiBuilder.data = [url.absoluteString dataUsingEncoding: NSUTF8StringEncoding];
     
     BTFuseTestAPIClient* client = [$apiBuilder build];
     
@@ -290,11 +291,11 @@ limitations under the License.
 - (void) testDeleteFileRecursively {
     $apiBuilder.endpoint = @"/file/remove";
     
-    NSString* path = [$testDataPath stringByAppendingPathComponent:@"recursiveDelete"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"recursiveDelete"];
     
     NSData* params = [NSJSONSerialization
         dataWithJSONObject: @{
-            @"path": path,
+            @"path": url.absoluteString,
             @"recursive": @(true)
         }
         options: 0
@@ -321,7 +322,7 @@ limitations under the License.
         XCTAssertEqualObjects(payload, @"true");
         
         NSFileManager* fm = [NSFileManager defaultManager];
-        XCTAssertFalse([fm fileExistsAtPath: path]);
+        XCTAssertFalse([fm fileExistsAtPath: url.path]);
         
         [expectation fulfill];
     }];
@@ -332,11 +333,11 @@ limitations under the License.
 - (void) testDeleteNonExistentFile {
     $apiBuilder.endpoint = @"/file/remove";
     
-    NSString* path = [$testDataPath stringByAppendingPathComponent:@"fileForDeleteTest_doesNotExist"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForDeleteTest_doesNotExist"];
     
     NSData* params = [NSJSONSerialization
         dataWithJSONObject: @{
-            @"path": path,
+            @"path": url.absoluteString,
             @"recursive": @(false)
         }
         options: 0
@@ -363,7 +364,7 @@ limitations under the License.
         XCTAssertEqualObjects(payload, @"false");
         
         NSFileManager* fm = [NSFileManager defaultManager];
-        XCTAssertFalse([fm fileExistsAtPath: path]);
+        XCTAssertFalse([fm fileExistsAtPath: url.path]);
         
         [expectation fulfill];
     }];
@@ -374,11 +375,11 @@ limitations under the License.
 - (void) testDeleteFile {
     $apiBuilder.endpoint = @"/file/remove";
     
-    NSString* path = [$testDataPath stringByAppendingPathComponent:@"fileForDeleteTest1"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForDeleteTest1"];
     
     NSData* params = [NSJSONSerialization
         dataWithJSONObject: @{
-            @"path": path,
+            @"path": url.absoluteString,
             @"recursive": @(false)
         }
         options: 0
@@ -405,7 +406,7 @@ limitations under the License.
         XCTAssertEqualObjects(payload, @"true");
         
         NSFileManager* fm = [NSFileManager defaultManager];
-        XCTAssertFalse([fm fileExistsAtPath: path]);
+        XCTAssertFalse([fm fileExistsAtPath: url.path]);
         
         [expectation fulfill];
     }];
@@ -416,9 +417,10 @@ limitations under the License.
 - (void) testWriteFileWithOffset {
     $apiBuilder.endpoint = @"/file/write";
     
-    NSString* path = [$testDataPath stringByAppendingPathComponent:@"fileForWriteTest1"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForWriteTest1"];
+    
     NSDictionary* jparams = @{
-        @"path": path,
+        @"path": url.absoluteString,
         @"offset": @(2)
     };
     
@@ -449,7 +451,7 @@ limitations under the License.
         NSError* e = nil;
         
         {
-            NSFileHandle* fileHandle = [NSFileHandle fileHandleForReadingAtPath: path];
+            NSFileHandle* fileHandle = [NSFileHandle fileHandleForReadingAtPath: url.path];
         
             if (!fileHandle) {
                 XCTFail("Could not open file");
@@ -475,9 +477,10 @@ limitations under the License.
 - (void) testWriteFile {
     $apiBuilder.endpoint = @"/file/write";
     
-    NSString* path = [$testDataPath stringByAppendingPathComponent:@"fileForWriteTest1"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForWriteTest1"];
+    
     NSDictionary* jparams = @{
-        @"path": path,
+        @"path": url.absoluteString,
         @"offset": @(0)
     };
     
@@ -508,7 +511,7 @@ limitations under the License.
         NSError* e = nil;
         
         {
-            NSFileHandle* fileHandle = [NSFileHandle fileHandleForReadingAtPath: path];
+            NSFileHandle* fileHandle = [NSFileHandle fileHandleForReadingAtPath: url.path];
         
             if (!fileHandle) {
                 XCTFail("Could not open file");
@@ -534,8 +537,9 @@ limitations under the License.
 - (void) testAppendFile {
     $apiBuilder.endpoint = @"/file/append";
     
-    NSString* path = [$testDataPath stringByAppendingPathComponent:@"fileForAppendTest1"];
-    NSData* params = [self createParamsBuffer: path withContent: [@"new content" dataUsingEncoding:NSUTF8StringEncoding]];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForAppendTest1"];
+    
+    NSData* params = [self createParamsBuffer: url.absoluteString withContent: [@"new content" dataUsingEncoding:NSUTF8StringEncoding]];
     
     $apiBuilder.data = params;
     
@@ -558,7 +562,7 @@ limitations under the License.
         NSError* e = nil;
         
         {
-            NSFileHandle* fileHandle = [NSFileHandle fileHandleForReadingAtPath: path];
+            NSFileHandle* fileHandle = [NSFileHandle fileHandleForReadingAtPath: url.path];
         
             if (!fileHandle) {
                 XCTFail("Could not open file");
@@ -584,8 +588,9 @@ limitations under the License.
 - (void) testTruncateFileWithNewContent {
     $apiBuilder.endpoint = @"/file/truncate";
     
-    NSString* path = [$testDataPath stringByAppendingPathComponent:@"fileForTruncateTest2"];
-    NSData* params = [self createParamsBuffer: path withContent: [@"new content" dataUsingEncoding:NSUTF8StringEncoding]];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForTruncateTest2"];
+    
+    NSData* params = [self createParamsBuffer: url.absoluteString withContent: [@"new content" dataUsingEncoding:NSUTF8StringEncoding]];
     
     $apiBuilder.data = params;
     
@@ -609,7 +614,7 @@ limitations under the License.
         NSError* e = nil;
         
         {
-            NSDictionary* attributes = [fm attributesOfItemAtPath: path error: &e];
+            NSDictionary* attributes = [fm attributesOfItemAtPath: url.path error: &e];
             if (e != nil) {
                 XCTFail("Error testing for size");
             }
@@ -619,7 +624,7 @@ limitations under the License.
         }
         
         {
-            NSFileHandle* fileHandle = [NSFileHandle fileHandleForReadingAtPath: path];
+            NSFileHandle* fileHandle = [NSFileHandle fileHandleForReadingAtPath: url.path];
         
             if (!fileHandle) {
                 XCTFail("Could not open file");
@@ -645,8 +650,9 @@ limitations under the License.
 - (void) testTruncateFile {
     $apiBuilder.endpoint = @"/file/truncate";
     
-    NSString* path = [$testDataPath stringByAppendingPathComponent:@"fileForTruncateTest1"];
-    NSData* params = [self createParamsBuffer: path];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForTruncateTest1"];
+    
+    NSData* params = [self createParamsBuffer: url.absoluteString];
     
     $apiBuilder.data = params;
     
@@ -666,7 +672,7 @@ limitations under the License.
         
         NSFileManager* fm = [NSFileManager defaultManager];
         NSError* e = nil;
-        NSDictionary* attributes = [fm attributesOfItemAtPath: path error: &e];
+        NSDictionary* attributes = [fm attributesOfItemAtPath: url.path error: &e];
         if (e != nil) {
             XCTFail("Error testing for size");
         }
@@ -683,8 +689,10 @@ limitations under the License.
 - (void) testFullFileReadWithOffset {
     $apiBuilder.endpoint = @"/file/read";
     
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForReadTest"];
+    
     NSData* data = [self toJSON: @{
-        @"path": [$testDataPath stringByAppendingPathComponent:@"fileForReadTest"],
+        @"path": url.absoluteString,
         @"length": @(-1),
         @"offset": @(2)
     }];
@@ -716,8 +724,10 @@ limitations under the License.
 - (void) testPartialFileReadWithOffset {
     $apiBuilder.endpoint = @"/file/read";
     
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForReadTest"];
+    
     NSData* data = [self toJSON: @{
-        @"path": [$testDataPath stringByAppendingPathComponent:@"fileForReadTest"],
+        @"path": url.absoluteString,
         @"length": @(2),
         @"offset": @(1)
     }];
@@ -749,8 +759,10 @@ limitations under the License.
 - (void) testPartialFileRead {
     $apiBuilder.endpoint = @"/file/read";
     
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForReadTest"];
+    
     NSData* data = [self toJSON: @{
-        @"path": [$testDataPath stringByAppendingPathComponent:@"fileForReadTest"],
+        @"path": url.absoluteString,
         @"length": @(2),
         @"offset": @(0)
     }];
@@ -782,8 +794,10 @@ limitations under the License.
 - (void) testFullFileRead {
     $apiBuilder.endpoint = @"/file/read";
     
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForReadTest"];
+    
     NSData* data = [self toJSON: @{
-        @"path": [$testDataPath stringByAppendingPathComponent:@"fileForReadTest"],
+        @"path": url.absoluteString,
         @"length": @(-1),
         @"offset": @(0)
     }];
@@ -815,8 +829,10 @@ limitations under the License.
 - (void) testCanMkdirWithRecursion {
     $apiBuilder.endpoint = @"/file/mkdir";
     
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"recursive/directory"];
+    
     NSData* data = [self toJSON: @{
-        @"path": [$testDataPath stringByAppendingPathComponent:@"recursive/directory"],
+        @"path": url.absoluteString,
         @"recursive": @(true)
     }];
     
@@ -847,8 +863,10 @@ limitations under the License.
 - (void) testCanMkdirWithoutRecursion {
     $apiBuilder.endpoint = @"/file/mkdir";
     
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"nonRecursiveDirectory"];
+    
     NSData* data = [self toJSON: @{
-        @"path": [$testDataPath stringByAppendingPathComponent:@"nonRecursiveDirectory"],
+        @"path": url.absoluteString,
         @"recursive": @(false)
     }];
     
@@ -879,10 +897,9 @@ limitations under the License.
 - (void) testShouldBeSize512 {
     $apiBuilder.endpoint = @"/file/size";
 
-    // Now, you can create or access files within the documentsDirectory
-    NSString* filePath = [$testDataPath stringByAppendingPathComponent:@"fileForSizeTest"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForSizeTest"];
     
-    $apiBuilder.data = [filePath dataUsingEncoding: NSUTF8StringEncoding];
+    $apiBuilder.data = [url.absoluteString dataUsingEncoding: NSUTF8StringEncoding];
     
     BTFuseTestAPIClient* client = [$apiBuilder build];
     
@@ -911,10 +928,9 @@ limitations under the License.
 - (void) testShouldBeFileType {
     $apiBuilder.endpoint = @"/file/type";
 
-    // Now, you can create or access files within the documentsDirectory
-    NSString* filePath = [$testDataPath stringByAppendingPathComponent:@"fileForTypeTest"];
+    NSURL* url = [$testDataURL URLByAppendingPathComponent:@"fileForTypeTest"];
     
-    $apiBuilder.data = [filePath dataUsingEncoding: NSUTF8StringEncoding];
+    $apiBuilder.data = [url.absoluteString dataUsingEncoding: NSUTF8StringEncoding];
     
     BTFuseTestAPIClient* client = [$apiBuilder build];
     
@@ -941,7 +957,7 @@ limitations under the License.
 
 - (void) testShouldBeDirectoryType {
     $apiBuilder.endpoint = @"/file/type";
-    $apiBuilder.data = [@"/" dataUsingEncoding: NSUTF8StringEncoding];
+    $apiBuilder.data = [@"file:///" dataUsingEncoding: NSUTF8StringEncoding];
     
     BTFuseTestAPIClient* client = [$apiBuilder build];
     

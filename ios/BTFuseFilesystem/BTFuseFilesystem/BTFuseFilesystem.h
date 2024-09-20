@@ -29,3 +29,6 @@ FOUNDATION_EXPORT const unsigned char BTFuseFilesystemVersionString[];
 #import <BTFuseFilesystem/BTFuseFilesystemFileType.h>
 #import <BTFuseFilesystem/BTFuseFilesystemPlugin.h>
 #import <BTFuseFilesystem/BTFuseFilesystemUtils.h>
+#import <BTFuseFilesystem/BTFuseFIlesystemFSAPIProto.h>
+#import <BTFuseFilesystem/BTFuseFilesystemFileAPI.h>
+#import <BTFuseFilesystem/BTFuseFilesystemFileAPIFactory.h>
